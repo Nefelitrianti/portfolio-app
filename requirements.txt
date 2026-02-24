@@ -2,9 +2,10 @@ streamlit
 streamlit-option-menu
 numpy==1.26.4
 pandas==2.2.2
-scikit-learn==1.4.2
+scikit-learn==1.8.0
 factor-analyzer==0.5.1
 openpyxl
 plotly
 streamlit
+
 
