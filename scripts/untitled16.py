@@ -10,7 +10,7 @@ from pathlib import Path
 st.set_page_config(page_title="Global Social Impact Dashboard", layout="wide")
 
 # ---------- PATHS ----------
-BASE_DIR = Path(__file__).resolve().parents[1]   # repo root
+BASE_DIR = Path(__file__).resolve().parent   # repo root
 FILE_PATH = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
 
 # ✅ define the sheet name you want
