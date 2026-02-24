@@ -268,6 +268,22 @@ def compute_efa_scores(likert_numeric_json: str):
     Accepts JSON-serialised numeric Likert data (cache-safe).
     Returns a DataFrame of 4 factor scores aligned to the same row index.
     """
+    # ── compatibility shim: sklearn ≥1.6 renamed force_all_finite → ensure_all_finite
+    import sklearn.utils.validation as _skval
+    if not hasattr(_skval, "check_array"):
+        pass  # very old sklearn – leave as-is
+    else:
+        import inspect as _inspect
+        _params = _inspect.signature(_skval.check_array).parameters
+        if "force_all_finite" not in _params and "ensure_all_finite" in _params:
+            # Patch numpy / sklearn so factor_analyzer doesn't crash
+            _orig_check = _skval.check_array
+            def _patched_check(*a, force_all_finite=None, **kw):
+                if force_all_finite is not None:
+                    kw.setdefault("ensure_all_finite", force_all_finite)
+                return _orig_check(*a, **kw)
+            _skval.check_array = _patched_check
+
     from factor_analyzer import FactorAnalyzer
     X = pd.read_json(likert_numeric_json)
     fa = FactorAnalyzer(n_factors=4, rotation="oblimin", method="minres")
@@ -359,9 +375,11 @@ df_clean["work_mode"] = np.select(
      (df_clean["pct_remote"] >= 40) & (df_clean["pct_remote"] <= 60),
      df_clean["pct_remote"] < 40],
     ["Remote", "Hybrid", "Office"],
-    default=np.nan,
+    default="Unknown",          # ← must be str; np.nan causes dtype conflict with numpy ≥2
 )
 work_order = ["Office", "Hybrid", "Remote"]
+# Replace sentinel with NaN so unknown rows are excluded
+df_clean["work_mode"] = df_clean["work_mode"].replace("Unknown", np.nan)
 df_clean["work_mode"] = pd.Categorical(df_clean["work_mode"], categories=work_order, ordered=True)
 df_master = df_clean.dropna(subset=["work_mode"]).copy()
 
