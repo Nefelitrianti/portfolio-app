@@ -314,8 +314,7 @@ if USE_EFA and len(likert_cols) == 8:
             sc_df = sc_df.copy()
             sc_df["row_id"] = tmp["row_id"].values
 
-            # optional: show which method was used
-            st.caption(f"EFA scoring method: {method_used}")
+            
 
             df = df.drop(columns=[f"Factor{i}_score" for i in range(1, 5)], errors="ignore")
             df = df.merge(sc_df, on="row_id", how="left")
@@ -351,7 +350,7 @@ df_clean["off_h"]      = pd.to_numeric(df_clean[off_col], errors="coerce")
 df_clean["total_h"]    = df_clean["rem_h"] + df_clean["off_h"]
 df_clean["pct_remote"] = np.where(df_clean["total_h"] > 0, (df_clean["rem_h"] / df_clean["total_h"]) * 100, np.nan)
 
-# ── FIX 3: np.select default must be a string (not np.nan) to avoid NumPy ≥2 dtype conflict
+
 df_clean["work_mode"] = np.select(
     [df_clean["pct_remote"] > 60,
      (df_clean["pct_remote"] >= 40) & (df_clean["pct_remote"] <= 60),
