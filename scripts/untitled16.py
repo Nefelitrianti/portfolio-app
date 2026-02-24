@@ -9,6 +9,9 @@ import plotly.express as px
 from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[1]   # repo root
 FILE_PATH = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
+st.write("BASE_DIR:", BASE_DIR)
+st.write("Looking for:", FILE_PATH)
+st.write("Exists:", FILE_PATH.exists())
 USE_EFA = True
 
 LIKERT_LEVELS = [
