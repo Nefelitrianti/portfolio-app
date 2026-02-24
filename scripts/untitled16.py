@@ -255,14 +255,9 @@ def load_excel_fast(path: str):
 
 @st.cache_data(show_spinner=False)
 def compute_efa_scores(X_json: str):
-    """
-    Compute 4 factor scores.
-    Try factor_analyzer (oblimin + minres). If it fails (sklearn mismatch on cloud),
-    fall back to sklearn FactorAnalysis (no rotation).
-    """
     X = pd.read_json(X_json)
 
-    # Try factor_analyzer first
+    # Always try factor_analyzer, but fall back safely on ANY failure
     try:
         from factor_analyzer import FactorAnalyzer
         fa = FactorAnalyzer(n_factors=4, rotation="oblimin", method="minres")
@@ -270,11 +265,10 @@ def compute_efa_scores(X_json: str):
         scores = fa.transform(X)
         method_used = "factor_analyzer (minres + oblimin)"
     except Exception as e:
-        # Fallback: sklearn FactorAnalysis
         from sklearn.decomposition import FactorAnalysis
         fa = FactorAnalysis(n_components=4, random_state=0)
         scores = fa.fit_transform(X)
-        method_used = f"sklearn FactorAnalysis fallback (no rotation). Reason: {type(e).__name__}"
+        method_used = f"sklearn FactorAnalysis (fallback, no rotation). Reason: {type(e).__name__}"
 
     out = pd.DataFrame(scores, columns=[f"Factor{i}_score" for i in range(1, 5)], index=X.index)
     return out, method_used
@@ -308,16 +302,23 @@ for i in range(1, 5):
 if USE_EFA and len(likert_cols) == 8:
     try:
         tmp = df[["row_id"] + likert_cols].copy()
-        # ── FIX 2: robust Likert converter (handles text AND numeric cells)
         for c in likert_cols:
             tmp[c] = likert_to_num(tmp[c])
+
         tmp = tmp.dropna(subset=likert_cols)
+
         if len(tmp) > 30:
             X = tmp[likert_cols].astype(float)
-            sc = compute_efa_scores(X.to_json())   # pass JSON for cache hashing
-            sc["row_id"] = tmp["row_id"].values
+
+            sc_df, method_used = compute_efa_scores(X.to_json())
+            sc_df = sc_df.copy()
+            sc_df["row_id"] = tmp["row_id"].values
+
+            # optional: show which method was used
+            st.caption(f"EFA scoring method: {method_used}")
+
             df = df.drop(columns=[f"Factor{i}_score" for i in range(1, 5)], errors="ignore")
-            df = df.merge(sc, on="row_id", how="left")
+            df = df.merge(sc_df, on="row_id", how="left")
         else:
             st.warning(f"Only {len(tmp)} complete Likert rows found — need >30 for EFA.")
     except Exception as e:
