@@ -4,19 +4,17 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-from pathlib import Path
 
-# ✅ MUST be the first Streamlit command
+# ✅ MUST be first Streamlit command
 st.set_page_config(page_title="Global Social Impact Dashboard", layout="wide")
 
-# ---------- PATHS ----------
-BASE_DIR = Path(__file__).resolve().parent   # repo root
-FILE_PATH = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
+# =========================
+# USER SETTINGS
+# =========================
+FILE_PATH = r"C:\Users\neftr\Downloads\RMAP_Data_Descriptor_Data.xlsx"
 SHEET_NAME = "RMAP_Data_Descriptor_Data"
-
 USE_EFA = True
 
-# ---------- SETTINGS ----------
 LIKERT_LEVELS = [
     "Strongly Disagree", "Disagree", "Somewhat Disagree",
     "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"
@@ -44,7 +42,9 @@ bf_lookup = {
     "ethnicity_f": {"Flexibility": "4.21e+05", "Challenges": "1.12e+03", "Career Anxiety": "0.12", "WLB Struggle": "0.95"},
 }
 
-# ---------- HELPERS ----------
+# =========================
+# HELPERS
+# =========================
 def clean_names(cols):
     out = []
     for c in cols:
@@ -97,48 +97,36 @@ def find_hours_cols(cols):
 
 def likert_to_num(s: pd.Series) -> pd.Series:
     """
-    Robust converter:
-    - handles numeric 1..7 / "1"
-    - handles "1 - Strongly Disagree"
-    - handles exact text labels in LIKERT_MAP
+    Robust conversion:
+    - numeric 1..7 or "1"
+    - "1 - Strongly Disagree"
+    - exact text labels
     """
     s_txt = s.astype(str).str.strip()
-
     s_num = pd.to_numeric(s_txt, errors="coerce")
     s_digit = pd.to_numeric(s_txt.str.extract(r"([1-7])", expand=False), errors="coerce")
     s_map = s_txt.map(LIKERT_MAP)
-
     return s_num.fillna(s_digit).fillna(s_map)
 
-# ---------- CSS ----------
-# Paste your full CSS instead of "..."
-st.markdown(""" 
-<style>
-/* example */
-html, body, [data-testid="stAppViewContainer"], .main { background: #0f141a !important; }
-</style>
-""", unsafe_allow_html=True)
-
-# ---------- STATE ----------
-if "current_factor" not in st.session_state:
-    st.session_state.current_factor = "Flexibility"
-
-def set_factor(f):
-    st.session_state.current_factor = f
-    st.rerun()
-
-# ---------- LOAD ----------
 @st.cache_data(show_spinner=False)
-def load_excel_fast(path: Path):
+def load_excel_fast(path: str):
     df0 = pd.read_excel(path, sheet_name=SHEET_NAME, engine="openpyxl")
     df0.columns = clean_names(df0.columns)
     df0.insert(0, "row_id", np.arange(1, len(df0) + 1))
 
-    # ✅ robust Likert detection for YOUR dataset
+    # ✅ robust Likert column detection for your dataset
     likert_cols = sorted([
         c for c in df0.columns
         if "please_rate_the_following_statements_regarding_remote_work" in c
-    ])[:8]
+    ])
+
+    # fallback: if not found, use generic prefix
+    if len(likert_cols) == 0:
+        generic_prefix = "please_rate_the_following_statements"
+        likert_cols = sorted([c for c in df0.columns if c.startswith(generic_prefix)])
+
+    # keep first 8 (your model expects 8 items)
+    likert_cols = likert_cols[:8]
 
     edu_col    = "please_share_the_following_total_years_of_full_time_education_from_primary_school_to_higher_education"
     age_col    = "please_share_the_following_your_age_in_years"
@@ -154,36 +142,40 @@ def load_excel_fast(path: Path):
 
     return df0[keep].copy(), likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col
 
-def compute_efa_scores(likert_df_numeric: pd.DataFrame) -> np.ndarray:
+@st.cache_data(show_spinner=False)
+def compute_efa_scores(likert_df_numeric: pd.DataFrame):
     from factor_analyzer import FactorAnalyzer
     fa = FactorAnalyzer(n_factors=4, rotation="oblimin", method="minres")
     fa.fit(likert_df_numeric)
     return fa.transform(likert_df_numeric)
 
-# ---------- TITLE ----------
+# =========================
+# UI (CSS)
+# =========================
+st.markdown("""
+<style>
+html, body, [data-testid="stAppViewContainer"], .main { background: #0f141a !important; }
+</style>
+""", unsafe_allow_html=True)
+
 st.markdown(
     "<h2 style='text-align:center;margin-bottom:0.4rem;color:white;'>"
     "Remote Work Factor Analysis Dashboard</h2>",
     unsafe_allow_html=True,
 )
 
-# ---------- FILE CHECK ----------
-st.write("BASE_DIR:", BASE_DIR)
-st.write("Looking for:", FILE_PATH)
-st.write("Exists:", FILE_PATH.exists())
-
-if not FILE_PATH.exists():
+# =========================
+# LOAD DATA
+# =========================
+if not os.path.exists(FILE_PATH):
     st.error("Excel not found. Fix FILE_PATH.")
-    st.code(str(FILE_PATH))
+    st.code(FILE_PATH)
     st.stop()
 
-# ---------- READ ----------
 df, likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col = load_excel_fast(FILE_PATH)
 
 st.write("Likert cols found:", len(likert_cols))
 st.write(likert_cols)
-st.write("rem_col:", rem_col)
-st.write("off_col:", off_col)
 
 # Ensure factor cols exist
 for i in range(1, 5):
@@ -191,18 +183,18 @@ for i in range(1, 5):
     if c not in df.columns:
         df[c] = np.nan
 
-# ---------- EFA ----------
+# =========================
+# EFA (robust)
+# =========================
 if USE_EFA and len(likert_cols) >= 4:
     tmp = df[["row_id"] + likert_cols].copy()
+
     for c in likert_cols:
         tmp[c] = likert_to_num(tmp[c])
 
-    st.write("Usable rows for EFA (before dropna):", len(tmp))
-    st.write("Non-null per Likert col:", tmp[likert_cols].notna().sum().to_dict())
-
     tmp = tmp.dropna(subset=likert_cols)
 
-    st.write("Usable rows for EFA (after dropna):", len(tmp))
+    st.write("Usable rows for EFA:", len(tmp))
 
     if len(tmp) > 30:
         try:
@@ -213,26 +205,26 @@ if USE_EFA and len(likert_cols) >= 4:
 
             df = df.drop(columns=[f"Factor{i}_score" for i in range(1, 5)], errors="ignore")
             df = df.merge(sc, on="row_id", how="left")
-
         except Exception as e:
             st.error("EFA failed")
             st.exception(e)
     else:
         st.warning("Not enough complete Likert rows (>30) to run EFA.")
 
-# Coerce factor columns numeric
 for i in range(1, 5):
     df[f"Factor{i}_score"] = pd.to_numeric(df[f"Factor{i}_score"], errors="coerce")
 
-st.write("Factor non-null counts:", {f"Factor{i}_score": df[f"Factor{i}_score"].notna().sum() for i in range(1, 5)})
+st.write("Factor non-null counts:", {f"Factor{i}_score": int(df[f"Factor{i}_score"].notna().sum()) for i in range(1, 5)})
 
-# ---------- CLEAN / FEATURES ----------
+# =========================
+# CLEAN / FEATURES
+# =========================
 df_clean = df.copy()
 df_clean["edu_years"] = to_num(df_clean[edu_col]) if edu_col in df_clean.columns else np.nan
 df_clean["age_num"]   = pd.to_numeric(df_clean[age_col], errors="coerce") if age_col in df_clean.columns else np.nan
 df_clean["age_group"] = pd.cut(df_clean["age_num"], bins=[-np.inf, 30, 50, np.inf], labels=["Young", "Mid", "Senior"])
 
-# gender mapping (robust)
+# robust gender mapping
 g = df_clean.get(gender_col, pd.Series(index=df_clean.index, dtype="object")).astype(str).str.strip().str.lower()
 df_clean["gender_f"] = np.select(
     [g.isin(["female", "woman"]), g.isin(["male", "man"])],
@@ -240,7 +232,7 @@ df_clean["gender_f"] = np.select(
     default=pd.NA
 )
 
-# ethnicity mapping (keep only main groups; others -> NA)
+# ethnicity (keep common ones)
 if eth_col in df_clean.columns:
     e = df_clean[eth_col].astype(str).str.strip()
     df_clean["ethnicity_f"] = e.where(e.isin(["Asian", "Black", "Mixed", "Other", "White"]), pd.NA)
@@ -251,13 +243,13 @@ if rem_col is None or off_col is None:
     st.error("Remote/office hours columns not found.")
     st.stop()
 
-# robust numeric hours (comma decimal safe)
 df_clean["rem_h"] = pd.to_numeric(df_clean[rem_col].astype(str).str.replace(",", "."), errors="coerce")
 df_clean["off_h"] = pd.to_numeric(df_clean[off_col].astype(str).str.replace(",", "."), errors="coerce")
 
 df_clean["total_h"] = df_clean["rem_h"] + df_clean["off_h"]
 df_clean["pct_remote"] = np.where(df_clean["total_h"] > 0, (df_clean["rem_h"] / df_clean["total_h"]) * 100, np.nan)
 
+# ✅ fix dtype issue: default must be string, then replace
 df_clean["work_mode"] = np.select(
     [
         df_clean["pct_remote"] > 60,
@@ -267,13 +259,15 @@ df_clean["work_mode"] = np.select(
     ["Remote", "Hybrid", "Office"],
     default=""
 ).astype("object")
-
 df_clean["work_mode"] = df_clean["work_mode"].replace("", pd.NA)
+
 work_order = ["Office", "Hybrid", "Remote"]
 df_clean["work_mode"] = pd.Categorical(df_clean["work_mode"], categories=work_order, ordered=True)
 df_master = df_clean.dropna(subset=["work_mode"]).copy()
 
-# ---------- SIDEBAR ----------
+# =========================
+# SIDEBAR
+# =========================
 with st.sidebar:
     st.markdown("### Analyze Per Demographic Team")
     demo_var = st.selectbox(
@@ -284,86 +278,47 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Evidence (BF)")
 
-    factor_name = st.session_state.current_factor
+    factor_name = st.session_state.get("current_factor", "Flexibility")
     bf_val_side = bf_lookup.get(demo_var, {}).get(factor_name, "NA")
     st.metric("Bayes Factor", value=str(bf_val_side))
     st.caption(evidence_text_from_bf(bf_val_side))
 
-    group_label = demo_label_map[demo_var]
-    try:
-        bf_num = float(bf_val_side)
-    except:
-        bf_num = np.nan
+# =========================
+# KPI CARDS (simple)
+# =========================
+if "current_factor" not in st.session_state:
+    st.session_state.current_factor = "Flexibility"
 
-    if np.isnan(bf_num):
-        result_txt = "Inconclusive: Not enough data."
-    elif bf_num > 100:
-        result_txt = "Extreme Support for H₁: The data shows an overwhelming difference. We reject H₀ with high certainty."
-    elif bf_num > 3:
-        result_txt = "Support for H₁: There is substantial evidence that groups differ."
-    elif bf_num < 1:
-        result_txt = "Support for H₀: The data suggests these groups are the same."
-    else:
-        result_txt = "Inconclusive: The data doesn't strongly favor H₀ or H₁."
+def set_factor(f):
+    st.session_state.current_factor = f
+    st.rerun()
 
-    st.markdown(f"""
-    <div style="color:#e8eef6;font-size:15px;margin-top:10px;">
-      In this analysis, we use the Bayes Factor (BF) to choose between:
-    </div>
-    <div class="hypothesis-box">
-      <div style="margin-bottom:10px;">
-        <span class="h0-label">H₀ (Null Hypothesis):</span>
-        The groups are the same (No effect of demographic).
-      </div>
-      <div>
-        <span class="h1-label">H₁ (Alternative Hypothesis):</span>
-        The groups are different (Demographic matters).
-      </div>
-      <div class="hypothesis-callout">
-        <div><span class="h0-label">H₀:</span> No significant difference in <b>{factor_name}</b> across <b>{group_label}</b> groups.</div>
-        <div style="margin-top:8px;"><span class="h1-label">H₁:</span> <b>{group_label}</b> significantly influences <b>{factor_name}</b>.</div>
-      </div>
-      <div style="margin-top:15px;">
-        <span class="result-label">Result:</span>
-        <span style="color:#1f2d3d;font-weight:500;">{result_txt}</span>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ---------- KPI CARDS ----------
 cols = st.columns(4)
 for i, label in enumerate(factor_labels):
-    bf_val   = bf_lookup.get(demo_var, {}).get(label, "NA")
-    defn     = factor_defs[label]
-    active   = (st.session_state.current_factor == label)
-    card_cls = "kpi-card active" if active else "kpi-card"
-    btn_lbl  = "✓ Selected" if active else "Select"
+    bf_val = bf_lookup.get(demo_var, {}).get(label, "NA")
+    defn = factor_defs[label]
+    active = (st.session_state.current_factor == label)
+    btn_lbl = "✓ Selected" if active else "Select"
     btn_type = "primary" if active else "secondary"
 
     with cols[i]:
-        st.markdown('<div class="kpi-wrap">', unsafe_allow_html=True)
         if st.button(btn_lbl, key=f"kpi_{i}", type=btn_type):
             set_factor(label)
-        st.markdown(f"""
-        <div class="{card_cls}">
-          <div class="kpi-card-title">{label}</div>
-          <div class="kpi-card-bf">BF: {bf_val}</div>
-          <div class="kpi-card-def">{defn}</div>
-        </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"**{label}**  \nBF: {bf_val}  \n{defn}")
 
-# ---------- PLOT ----------
+# =========================
+# PLOT
+# =========================
 f_label = st.session_state.current_factor
 factor_col = factor_to_col[f_label]
 group_label = demo_label_map[demo_var]
 
 plot_df = df_master.dropna(subset=[demo_var, factor_col]).copy()
 
-st.markdown("<div style='margin-top: 60px'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 30px'></div>", unsafe_allow_html=True)
 
 if plot_df.empty:
-    st.warning("No data to plot. Check factor scores and demographic filtering.")
+    st.warning("No data to plot. Factor scores or demographics are missing after filtering.")
 else:
     plot_df[demo_var] = plot_df[demo_var].astype("category")
 
