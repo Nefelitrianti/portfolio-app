@@ -3,9 +3,7 @@ from streamlit.components.v1 import iframe
 from streamlit_option_menu import option_menu
 from pathlib import Path
 
-# -----------------------------
-# SESSION STATE
-# -----------------------------
+
 if "project_opened" not in st.session_state:
     st.session_state.project_opened = False
 if "selected_project" not in st.session_state:
@@ -13,32 +11,26 @@ if "selected_project" not in st.session_state:
 
 APP_DIR = Path(__file__).parent
 
-# -----------------------------
-# PAGE CONFIG (MUST BE FIRST STREAMLIT CALL)
-# -----------------------------
+
 st.set_page_config(page_title="Portfolio-App", layout="wide")
 
-# Hide ONLY Streamlit multipage navigation (the left "app / Projects" list)
+
 st.markdown("""
 <style>
 [data-testid="stSidebarNav"] {display: none !important;}
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------
-# TOP NAV
-# -----------------------------
+
 selected = option_menu(
     menu_title=None,
     options=["Portfolio", "Projects"],
-    icons=["person", "file-earmark-text"],  # must match number of options
+    icons=["person", "file-earmark-text"],  
     orientation="horizontal",
     default_index=0,
 )
 
-# -----------------------------
-# PORTFOLIO
-# -----------------------------
+
 if selected == "Portfolio":
     st.title("Data & Analytics Portfolio")
 
@@ -83,16 +75,16 @@ if selected == "Portfolio":
         </p>
 
         <div class="skill-header">📊 Statistics (Python & R)</div>
-        <div class="skill-item">• Implementing <strong>Bayesian Factor Analysis</strong> to extract latent variables from <strong>University of Bocconi</strong> datasets.</div>
-        <div class="skill-item">• Utilizing <strong>Bayes Factors</strong> for rigorous model selection and hypothesis testing in demographic research.</div>
+        <div class="skill-item">• Implementing Bayesian Factor Analysis to extract latent variables from University of Bocconi datasets.</div>
+        <div class="skill-item">• Utilizing Bayes Factors for rigorous model selection and hypothesis testing in demographic research.</div>
 
         <div class="skill-header">⚙️ Automated Data Pipelines (SQL & Python)</div>
-        <div class="skill-item">• Engineered an automated ETL system to scrape and process <strong>Yahoo Finance</strong> data for a 6-stock portfolio.</div>
-        <div class="skill-item">• Managed high-frequency closing prices via a structured <strong>MySQL</strong> database.</div>
+        <div class="skill-item">• Engineered an automated ETL system to scrape and process Yahoo Finance data for a 6-stock portfolio.</div>
+        <div class="skill-item">• Managed high-frequency closing prices via a structured MySQL database.</div>
 
         <div class="skill-header">📈 Interactive Visualization (RShiny & Power BI)</div>
-        <div class="skill-item">• Developed <strong>RShiny</strong> dashboards to visualize <strong>Official European Statistics</strong> and demographic trends.</div>
-        <div class="skill-item">• Leveraged <strong>Power BI</strong> for deep-dive relationship analysis between stock volatility and external economic factors.</div>
+        <div class="skill-item">• Developed RShiny dashboards to visualize Official European Statistics and demographic trends.</div>
+        <div class="skill-item">• Leveraged Power BI for deep-dive relationship analysis between stock volatility and external economic factors.</div>
         """,
         unsafe_allow_html=True,
     )
@@ -151,7 +143,7 @@ if selected == "Portfolio":
 
         <div class="custom-expander exp2">
           <details>
-            <summary>🇪🇺 SES Earnings: European Inequality Explorer</summary>
+            <summary> SES Earnings: European Inequality Explorer</summary>
             <div class="content">
               <b>The Problem:</b> Does high nominal income translate to real-world purchasing power, and where do gender opportunity gaps persist?<br><br>
               <b>The Analysis:</b><br>
@@ -164,7 +156,7 @@ if selected == "Portfolio":
 
         <div class="custom-expander exp3">
           <details>
-            <summary>🇮🇹 Italy Demographics Data</summary>
+            <summary> Italy Demographics Data</summary>
             <div class="content">
               <b>The Focus:</b> Analyzing fertility, mortality and population structure across the years.<br><br>
               <b>The Analysis:</b><br>
@@ -190,9 +182,7 @@ if selected == "Portfolio":
         """
     )
 
-# -----------------------------
-# PROJECTS
-# -----------------------------
+
 elif selected == "Projects":
     PROJECTS = {
         "Factor Analysis": {
@@ -217,7 +207,7 @@ elif selected == "Projects":
         },
     }
 
-    # -------- LIST VIEW --------
+    
     if not st.session_state.project_opened:
         st.title("Projects")
 
@@ -235,7 +225,7 @@ elif selected == "Projects":
             st.session_state.project_opened = True
             st.rerun()
 
-    # -------- DETAIL VIEW --------
+    
     else:
         if st.button("⬅️ Back to Projects"):
             st.session_state.project_opened = False
@@ -251,17 +241,17 @@ elif selected == "Projects":
 
         p = PROJECTS[selected_name]
 
-        # --- Python script project ---
+        
         if p["type"] == "python_script":
             script_file = APP_DIR / p["script_path"]
             if script_file.exists():
                 with open(script_file, "r", encoding="utf-8") as f:
                     code = f.read()
 
-                # Optional: a heading
+                
                 st.header(selected_name)
 
-                # Run script in its own namespace but allow it to use `st`
+                
                 scope = {"st": st}
 
                 try:
@@ -271,7 +261,7 @@ elif selected == "Projects":
             else:
                 st.error(f"Script file not found: {p['script_path']}")
 
-        # --- Power BI project ---
+        
         elif p["type"] == "powerbi":
             st.header(selected_name)
             img = APP_DIR / p["image_path"]
@@ -280,7 +270,7 @@ elif selected == "Projects":
             else:
                 st.error(f"Image not found: {p['image_path']}")
 
-        # --- Shiny project ---
+        
         elif p["type"] == "shiny":
             st.header(selected_name)
             iframe(p["url"], height=800, scrolling=True)
