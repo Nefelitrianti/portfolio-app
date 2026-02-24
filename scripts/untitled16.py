@@ -17,39 +17,35 @@ FILE_PATH  = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
 SHEET_NAME = "RMAP_Data_Descriptor_Data"
 USE_EFA    = True
 
+
 LIKERT_LEVELS = [
     "Strongly Disagree", "Disagree", "Somewhat Disagree",
     "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"
 ]
 LIKERT_MAP = {k: i + 1 for i, k in enumerate(LIKERT_LEVELS)}
 
-factor_labels  = ["Flexibility", "Challenges", "Career Anxiety", "WLB Struggle"]
-factor_to_col  = {
-    "Flexibility":    "Factor1_score",
-    "Challenges":     "Factor2_score",
+factor_labels = ["Flexibility", "Challenges", "Career Anxiety", "WLB Struggle"]
+factor_to_col = {
+    "Flexibility": "Factor1_score",
+    "Challenges": "Factor2_score",
     "Career Anxiety": "Factor3_score",
-    "WLB Struggle":   "Factor4_score",
+    "WLB Struggle": "Factor4_score",
 }
 factor_defs = {
-    "Flexibility":    "Control over work schedule.",
-    "Challenges":     "Technical/social barriers.",
+    "Flexibility": "Control over work schedule.",
+    "Challenges": "Technical/social barriers.",
     "Career Anxiety": "Fear of missing promotions.",
-    "WLB Struggle":   "Home/work boundaries.",
+    "WLB Struggle": "Home/work boundaries.",
 }
-demo_label_map = {
-    "gender_f":    "Gender",
-    "age_group":   "Age Group",
-    "ethnicity_f": "Ethnicity",
-}
+demo_label_map = {"gender_f": "Gender", "age_group": "Age Group", "ethnicity_f": "Ethnicity"}
+
 bf_lookup = {
-    "gender_f":    {"Flexibility": "1.08e+25", "Challenges": "6.15e+07", "Career Anxiety": "0.08",  "WLB Struggle": "3.63"},
-    "age_group":   {"Flexibility": "1.05e+17", "Challenges": "1.97e+64", "Career Anxiety": "9.53e+13", "WLB Struggle": "1.37e+27"},
-    "ethnicity_f": {"Flexibility": "4.21e+05", "Challenges": "1.12e+03", "Career Anxiety": "0.12",  "WLB Struggle": "0.95"},
+    "gender_f": {"Flexibility": "1.08e+25", "Challenges": "6.15e+07", "Career Anxiety": "0.08", "WLB Struggle": "3.63"},
+    "age_group": {"Flexibility": "1.05e+17", "Challenges": "1.97e+64", "Career Anxiety": "9.53e+13", "WLB Struggle": "1.37e+27"},
+    "ethnicity_f": {"Flexibility": "4.21e+05", "Challenges": "1.12e+03", "Career Anxiety": "0.12", "WLB Struggle": "0.95"},
 }
 
-# ══════════════════════════════════════════════════════════════════════════════
-# HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
+
 def clean_names(cols):
     out = []
     for c in cols:
@@ -62,36 +58,25 @@ def clean_names(cols):
 def to_num(series):
     return pd.to_numeric(series.astype(str).str.replace(",", ".", regex=False), errors="coerce")
 
-def likert_to_num(series: pd.Series) -> pd.Series:
-    """
-    Robustly convert Likert text → 1-7 integer.
-    Handles:
-      • exact matches in LIKERT_MAP
-      • already-numeric values (1–7)
-      • case / whitespace variants
-    """
-    # Build a case-insensitive lookup
+def likert_to_num(series):
+    """Robust Likert converter: handles text labels AND already-numeric 1-7 values."""
     ci_map = {k.strip().lower(): v for k, v in LIKERT_MAP.items()}
-
     def _convert(val):
         if pd.isna(val):
             return np.nan
-        # Already numeric?
         try:
             n = float(str(val).replace(",", "."))
             if 1 <= n <= 7:
                 return n
         except ValueError:
             pass
-        # Text lookup
         return ci_map.get(str(val).strip().lower(), np.nan)
-
     return series.apply(_convert)
 
 def evidence_text_from_bf(bf_val):
     try:
         bf = float(bf_val)
-    except Exception:
+    except:
         return ""
     if bf > 100: return "Extreme evidence (supports H₁)."
     if bf > 30:  return "Very strong evidence (supports H₁)."
@@ -103,30 +88,38 @@ def evidence_text_from_bf(bf_val):
 def make_label(f_label, m):
     if pd.isna(m):
         return ""
-    if f_label == "Flexibility":    return "Less Flexible"  if m < 0 else "More Flexible"
-    if f_label == "Challenges":     return "Fewer Barriers" if m < 0 else "More Barriers"
-    if f_label == "Career Anxiety": return "Less Anxious"   if m < 0 else "More Anxious"
-    if f_label == "WLB Struggle":   return "Better WLB"     if m < 0 else "Struggling WLB"
+    if f_label == "Flexibility":
+        return "Less Flexible" if m < 0 else "More Flexible"
+    if f_label == "Challenges":
+        return "Fewer Barriers" if m < 0 else "More Barriers"
+    if f_label == "Career Anxiety":
+        return "Less Anxious" if m < 0 else "More Anxious"
+    if f_label == "WLB Struggle":
+        return "Better WLB" if m < 0 else "Struggling WLB"
     return ""
 
 def find_hours_cols(cols):
     STEM = "on_average_what_amount_of_time_of_your_weekly_work_schedule_do_you_perform_remotely_in_the_office"
     cols = list(cols)
-    rem_candidates = [c for c in cols if STEM in c and "remotely" in c and "hours" in c
-                      and not c.endswith("in_the_office_hours")]
+    rem_candidates = [c for c in cols if STEM in c and "remotely" in c and "hours" in c and not c.endswith("in_the_office_hours")]
     off_candidates = [c for c in cols if STEM in c and c.endswith("in_the_office_hours")]
     if not off_candidates:
         off_candidates = [c for c in cols if STEM in c and "in_the_office" in c and "hours" in c]
     if not rem_candidates:
-        rem_candidates = [c for c in cols if "remotely" in c and "hours" in c]
+        rem_candidates = [c for c in cols if ("remotely" in c and "hours" in c)]
     if not off_candidates:
-        off_candidates = [c for c in cols if "in_the_office" in c and "hours" in c]
-    return (rem_candidates[0] if rem_candidates else None,
-            off_candidates[0] if off_candidates else None)
+        off_candidates = [c for c in cols if ("in_the_office" in c and "hours" in c)]
+    return (rem_candidates[0] if rem_candidates else None, off_candidates[0] if off_candidates else None)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# CSS
-# ══════════════════════════════════════════════════════════════════════════════
+
+if __name__ == "__main__" or not st.session_state.get("_page_config_set"):
+    try:
+        st.set_page_config(page_title="Global Social Impact Dashboard", layout="wide")
+        st.session_state["_page_config_set"] = True
+    except Exception:
+        pass
+
+
 st.markdown("""
 <style>
 html, body,
@@ -163,7 +156,10 @@ section[data-testid="stSidebar"] *:not(.hypothesis-box):not(.hypothesis-box *) {
 }
 .result-label { color: #f39c12 !important; font-weight: 900 !important; }
 
-.kpi-wrap { position: relative; margin-bottom: 16px; }
+.kpi-wrap {
+    position: relative;
+    margin-bottom: 16px;
+}
 .kpi-card {
     background: #ffffff;
     border: 2px solid #d8dee7;
@@ -222,9 +218,7 @@ section[data-testid="stSidebar"] *:not(.hypothesis-box):not(.hypothesis-box *) {
 </style>
 """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SESSION STATE
-# ══════════════════════════════════════════════════════════════════════════════
+
 if "current_factor" not in st.session_state:
     st.session_state.current_factor = "Flexibility"
 
@@ -232,9 +226,6 @@ def set_factor(f):
     st.session_state.current_factor = f
     st.rerun()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# DATA LOADING
-# ══════════════════════════════════════════════════════════════════════════════
 @st.cache_data(show_spinner=False)
 def load_excel_fast(path: str):
     df0 = pd.read_excel(path, sheet_name=SHEET_NAME, engine="openpyxl")
@@ -242,7 +233,7 @@ def load_excel_fast(path: str):
     df0.insert(0, "row_id", np.arange(1, len(df0) + 1))
 
     needed_prefix = "please_rate_the_following_statements"
-    likert_cols   = [c for c in df0.columns if c.startswith(needed_prefix)][:8]
+    likert_cols = [c for c in df0.columns if c.startswith(needed_prefix)][:8]
 
     edu_col    = "please_share_the_following_total_years_of_full_time_education_from_primary_school_to_higher_education"
     age_col    = "please_share_the_following_your_age_in_years"
@@ -253,7 +244,7 @@ def load_excel_fast(path: str):
 
     keep = ["row_id"] + likert_cols
     for c in [edu_col, age_col, gender_col, eth_col, rem_col, off_col]:
-        if c and c in df0.columns and c not in keep:
+        if c is not None and c in df0.columns and c not in keep:
             keep.append(c)
     for i in range(1, 5):
         c = f"Factor{i}_score"
@@ -263,38 +254,28 @@ def load_excel_fast(path: str):
     return df0[keep].copy(), likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col
 
 @st.cache_data(show_spinner=False)
-def compute_efa_scores(likert_numeric_json: str):
-    """
-    Accepts JSON-serialised numeric Likert data (cache-safe).
-    Returns a DataFrame of 4 factor scores aligned to the same row index.
-    """
-    # ── compatibility shim: sklearn ≥1.6 renamed force_all_finite → ensure_all_finite
+def compute_efa_scores(likert_json: str):
+    # ── FIX 1: patch sklearn ≥1.6 which renamed force_all_finite → ensure_all_finite
     import sklearn.utils.validation as _skval
-    if not hasattr(_skval, "check_array"):
-        pass  # very old sklearn – leave as-is
-    else:
-        import inspect as _inspect
-        _params = _inspect.signature(_skval.check_array).parameters
-        if "force_all_finite" not in _params and "ensure_all_finite" in _params:
-            # Patch numpy / sklearn so factor_analyzer doesn't crash
-            _orig_check = _skval.check_array
-            def _patched_check(*a, force_all_finite=None, **kw):
-                if force_all_finite is not None:
-                    kw.setdefault("ensure_all_finite", force_all_finite)
-                return _orig_check(*a, **kw)
-            _skval.check_array = _patched_check
+    import inspect as _inspect
+    _sig = _inspect.signature(_skval.check_array).parameters
+    if "force_all_finite" not in _sig and "ensure_all_finite" in _sig:
+        _orig = _skval.check_array
+        def _patched(*a, force_all_finite=None, **kw):
+            if force_all_finite is not None:
+                kw.setdefault("ensure_all_finite", force_all_finite)
+            return _orig(*a, **kw)
+        _skval.check_array = _patched
 
     from factor_analyzer import FactorAnalyzer
-    X = pd.read_json(likert_numeric_json)
+    X = pd.read_json(likert_json)
     fa = FactorAnalyzer(n_factors=4, rotation="oblimin", method="minres")
     fa.fit(X)
     scores = fa.transform(X)
     return pd.DataFrame(scores, columns=[f"Factor{i}_score" for i in range(1, 5)],
                         index=X.index)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TITLE
-# ══════════════════════════════════════════════════════════════════════════════
+
 st.markdown(
     "<h2 style='text-align:center;margin-bottom:0.4rem;color:white;'>"
     "Remote Work Factor Analysis Dashboard</h2>",
@@ -302,52 +283,42 @@ st.markdown(
 )
 
 if not os.path.exists(FILE_PATH):
-    st.error(f"Excel not found: {FILE_PATH}")
+    st.error("Excel not found. Fix FILE_PATH.")
+    st.code(FILE_PATH)
     st.stop()
 
-df, likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col = load_excel_fast(str(FILE_PATH))
+df, likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col = load_excel_fast(FILE_PATH)
 
-# ── Initialise factor score columns ──────────────────────────────────────────
 for i in range(1, 5):
     if f"Factor{i}_score" not in df.columns:
         df[f"Factor{i}_score"] = np.nan
 
-# ── EFA ───────────────────────────────────────────────────────────────────────
 if USE_EFA and len(likert_cols) == 8:
     try:
         tmp = df[["row_id"] + likert_cols].copy()
-
-        # ★ KEY FIX: use robust converter instead of plain .map()
+        # ── FIX 2: robust Likert converter (handles text AND numeric cells)
         for c in likert_cols:
             tmp[c] = likert_to_num(tmp[c])
-
-        tmp_clean = tmp.dropna(subset=likert_cols)
-
-        if len(tmp_clean) > 30:
-            X = tmp_clean[likert_cols].astype(float)
-            # Pass JSON so st.cache_data can hash it
-            sc = compute_efa_scores(X.to_json())
-            sc["row_id"] = tmp_clean["row_id"].values
-
+        tmp = tmp.dropna(subset=likert_cols)
+        if len(tmp) > 30:
+            X = tmp[likert_cols].astype(float)
+            sc = compute_efa_scores(X.to_json())   # pass JSON for cache hashing
+            sc["row_id"] = tmp["row_id"].values
             df = df.drop(columns=[f"Factor{i}_score" for i in range(1, 5)], errors="ignore")
             df = df.merge(sc, on="row_id", how="left")
         else:
-            st.warning(f"Only {len(tmp_clean)} complete Likert rows — need >30 for EFA.")
-    except ImportError:
-        st.error("`factor_analyzer` not installed. Run: pip install factor_analyzer")
+            st.warning(f"Only {len(tmp)} complete Likert rows found — need >30 for EFA.")
     except Exception as e:
         st.error(f"EFA failed: {e}")
 
 for i in range(1, 5):
     df[f"Factor{i}_score"] = pd.to_numeric(df[f"Factor{i}_score"], errors="coerce")
 
-# ── Demographics & work-mode ──────────────────────────────────────────────────
+
 df_clean = df.copy()
 df_clean["edu_years"] = to_num(df_clean[edu_col]) if edu_col in df_clean.columns else np.nan
 df_clean["age_num"]   = pd.to_numeric(df_clean[age_col], errors="coerce") if age_col in df_clean.columns else np.nan
-df_clean["age_group"] = pd.cut(df_clean["age_num"],
-                                bins=[-np.inf, 30, 50, np.inf],
-                                labels=["Young", "Mid", "Senior"])
+df_clean["age_group"] = pd.cut(df_clean["age_num"], bins=[-np.inf, 30, 50, np.inf], labels=["Young", "Mid", "Senior"])
 df_clean["gender_f"]  = df_clean.get(gender_col, np.nan)
 df_clean["gender_f"]  = df_clean["gender_f"].where(df_clean["gender_f"].isin(["Female", "Male"]), np.nan)
 
@@ -365,27 +336,21 @@ if rem_col is None or off_col is None:
 df_clean["rem_h"]      = pd.to_numeric(df_clean[rem_col], errors="coerce")
 df_clean["off_h"]      = pd.to_numeric(df_clean[off_col], errors="coerce")
 df_clean["total_h"]    = df_clean["rem_h"] + df_clean["off_h"]
-df_clean["pct_remote"] = np.where(
-    df_clean["total_h"] > 0,
-    (df_clean["rem_h"] / df_clean["total_h"]) * 100,
-    np.nan,
-)
+df_clean["pct_remote"] = np.where(df_clean["total_h"] > 0, (df_clean["rem_h"] / df_clean["total_h"]) * 100, np.nan)
+
+# ── FIX 3: np.select default must be a string (not np.nan) to avoid NumPy ≥2 dtype conflict
 df_clean["work_mode"] = np.select(
     [df_clean["pct_remote"] > 60,
      (df_clean["pct_remote"] >= 40) & (df_clean["pct_remote"] <= 60),
      df_clean["pct_remote"] < 40],
     ["Remote", "Hybrid", "Office"],
-    default="Unknown",          # ← must be str; np.nan causes dtype conflict with numpy ≥2
+    default="Unknown",
 )
-work_order = ["Office", "Hybrid", "Remote"]
-# Replace sentinel with NaN so unknown rows are excluded
 df_clean["work_mode"] = df_clean["work_mode"].replace("Unknown", np.nan)
+work_order = ["Office", "Hybrid", "Remote"]
 df_clean["work_mode"] = pd.Categorical(df_clean["work_mode"], categories=work_order, ordered=True)
 df_master = df_clean.dropna(subset=["work_mode"]).copy()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SIDEBAR
-# ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("### Analyze Per Demographic Team")
     demo_var = st.selectbox(
@@ -396,15 +361,15 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Evidence (BF)")
 
-    factor_name  = st.session_state.current_factor
-    bf_val_side  = bf_lookup.get(demo_var, {}).get(factor_name, "NA")
+    factor_name = st.session_state.current_factor
+    bf_val_side = bf_lookup.get(demo_var, {}).get(factor_name, "NA")
     st.metric("Bayes Factor", value=str(bf_val_side))
     st.caption(evidence_text_from_bf(bf_val_side))
 
     group_label = demo_label_map[demo_var]
     try:
         bf_num = float(bf_val_side)
-    except Exception:
+    except:
         bf_num = np.nan
 
     if np.isnan(bf_num):
@@ -442,10 +407,9 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# KPI CARDS
-# ══════════════════════════════════════════════════════════════════════════════
+
 cols = st.columns(4)
+
 for i, label in enumerate(factor_labels):
     bf_val   = bf_lookup.get(demo_var, {}).get(label, "NA")
     defn     = factor_defs[label]
@@ -467,16 +431,13 @@ for i, label in enumerate(factor_labels):
         </div>
         """, unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# MAIN CHART
-# ══════════════════════════════════════════════════════════════════════════════
+
 f_label    = st.session_state.current_factor
 factor_col = factor_to_col[f_label]
 group_label = demo_label_map[demo_var]
 
 plot_df = df_master.dropna(subset=[demo_var, factor_col]).copy()
 st.markdown("<div style='margin-top: 60px'></div>", unsafe_allow_html=True)
-
 if plot_df.empty:
     st.warning("No data to plot. Factor scores or demographics are missing after filtering.")
 else:
@@ -508,7 +469,9 @@ else:
         category_orders={"work_mode": work_order},
     )
     fig.update_traces(textposition="outside")
-    fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1].strip()))
+    fig.for_each_annotation(lambda a: a.update(
+        text=a.text.split("=")[-1].strip()
+    ))
     fig.update_layout(
         height=720,
         showlegend=False,
@@ -516,7 +479,8 @@ else:
         xaxis_title="",
         font=dict(size=14),
         margin=dict(l=20, r=20, t=60, b=20),
-        title={"x": 0.5, "xanchor": "center"},
+        title={"x": 0.5, "xanchor": "center"}
     )
     fig.add_hline(y=0, line_dash="dash", opacity=0.35)
     st.plotly_chart(fig, use_container_width=True)
+
