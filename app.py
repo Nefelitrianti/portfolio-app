@@ -177,14 +177,6 @@ if selected == "Portfolio":
       </details>
     </div>
     """)
-elif selected == "CV":
-    st.session_state.project_opened = False 
-    st.title("📄 CV")
-    if not CV_PATH.exists():
-        st.error(f"CV not found: {CV_PATH}")
-    else:
-        with open(CV_PATH, "rb") as f:
-            st.download_button("⬇️ Download CV", data=f, file_name="Trianti_Resume.pdf", mime="application/pdf")
 
 elif selected == "Projects":
     PROJECTS = {
