@@ -4,15 +4,24 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-
-
 from pathlib import Path
+
+# ✅ MUST be the first Streamlit command
+st.set_page_config(page_title="Global Social Impact Dashboard", layout="wide")
+
+# ---------- PATHS ----------
 BASE_DIR = Path(__file__).resolve().parents[1]   # repo root
 FILE_PATH = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
+
+# ✅ define the sheet name you want
+SHEET_NAME = "RMAP_Data_Descriptor_Data"
+
+USE_EFA = True
+
+# Debug (OK now, after set_page_config)
 st.write("BASE_DIR:", BASE_DIR)
 st.write("Looking for:", FILE_PATH)
 st.write("Exists:", FILE_PATH.exists())
-USE_EFA = True
 
 LIKERT_LEVELS = [
     "Strongly Disagree", "Disagree", "Somewhat Disagree",
@@ -40,7 +49,6 @@ bf_lookup = {
     "age_group": {"Flexibility": "1.05e+17", "Challenges": "1.97e+64", "Career Anxiety": "9.53e+13", "WLB Struggle": "1.37e+27"},
     "ethnicity_f": {"Flexibility": "4.21e+05", "Challenges": "1.12e+03", "Career Anxiety": "0.12", "WLB Struggle": "0.95"},
 }
-
 
 def clean_names(cols):
     out = []
@@ -92,121 +100,8 @@ def find_hours_cols(cols):
         off_candidates = [c for c in cols if ("in_the_office" in c and "hours" in c)]
     return (rem_candidates[0] if rem_candidates else None, off_candidates[0] if off_candidates else None)
 
-
-if __name__ == "__main__" or not st.session_state.get("_page_config_set"):
-    try:
-        st.set_page_config(page_title="Global Social Impact Dashboard", layout="wide")
-        st.session_state["_page_config_set"] = True
-    except Exception:
-        pass
-
-
-
-st.markdown("""
-<style>
-/* ── App background ── */
-html, body,
-[data-testid="stAppViewContainer"],
-.main { background: lightgray !important; }
-
-/* ── Sidebar ── */
-section[data-testid="stSidebar"] {
-    background: #1a2027 !important;
-    font-size: 16px !important;
-    border-right: 1px solid rgba(255,255,255,0.08) !important;
-}
-section[data-testid="stSidebar"] *:not(.hypothesis-box):not(.hypothesis-box *) {
-    color: #e8eef6 !important;
-}
-
-/* ── Hypothesis box (light) ── */
-.hypothesis-box {
-    background: #f0f7ff !important;
-    border-left: 5px solid #3498db !important;
-    padding: 14px !important;
-    border-radius: 10px !important;
-    margin: 14px 0 !important;
-    font-size: 16px !important;
-    line-height: 1.5 !important;
-}
-.hypothesis-box, .hypothesis-box * { color: #1f2d3d !important; }
-.h0-label  { color: #e74c3c !important; font-weight: 900 !important; }
-.h1-label  { color: #27ae60 !important; font-weight: 900 !important; }
-.hypothesis-callout {
-    background: #f8fbff !important;
-    border-left: 4px solid #1f77ff !important;
-    padding: 10px !important;
-    border-radius: 8px !important;
-    margin-top: 10px !important;
-}
-.result-label { color: #f39c12 !important; font-weight: 900 !important; }
-
-/* ══════════════════════════════════════════
-   KPI CARDS
-   ══════════════════════════════════════════ */
-.kpi-wrap {
-    position: relative;
-    margin-bottom: 16px;
-}
-.kpi-card {
-    background: #ffffff;
-    border: 2px solid #d8dee7;
-    border-radius: 18px;
-    padding: 52px 18px 18px 18px;
-    min-height: 170px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    box-sizing: border-box;
-    transition: border-color 0.15s, box-shadow 0.15s;
-}
-.kpi-card.active {
-    border: 2px solid #e74c3c !important;
-    box-shadow: 0 0 0 3px rgba(231,76,60,0.12), 0 8px 22px rgba(0,0,0,0.14) !important;
-}
-.kpi-card-title { font-size: 18px; font-weight: 800; color: #111827; }
-.kpi-card-bf    { font-size: 13px; font-weight: 700; color: #374151; }
-.kpi-card-def   { font-size: 12px; color: #6b7280; line-height: 1.4; }
-
-/* The button sits inside .kpi-wrap — pull it to top-left over the card */
-.kpi-wrap [data-testid="stButton"] {
-    position: absolute !important;
-    top: 12px !important;
-    left: 14px !important;
-    z-index: 10 !important;
-}
-.kpi-wrap [data-testid="stButton"] button {
-    padding: 4px 13px !important;
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.6px !important;
-    text-transform: uppercase !important;
-    border-radius: 20px !important;
-    height: auto !important;
-    min-height: unset !important;
-    line-height: 1.5 !important;
-    white-space: nowrap !important;
-    box-shadow: none !important;
-    transition: all 0.15s !important;
-}
-.kpi-wrap [data-testid="stButton"] button[kind="secondary"] {
-    background: #f1f3f5 !important;
-    border: 2px solid #d0d5dd !important;
-    color: #374151 !important;
-}
-.kpi-wrap [data-testid="stButton"] button[kind="secondary"]:hover {
-    background: #e74c3c !important;
-    border-color: #e74c3c !important;
-    color: #fff !important;
-}
-.kpi-wrap [data-testid="stButton"] button[kind="primary"] {
-    background: #e74c3c !important;
-    border: 2px solid #e74c3c !important;
-    color: #ffffff !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
+# ---------- CSS ----------
+st.markdown(""" ... your big CSS here ... """, unsafe_allow_html=True)
 
 if "current_factor" not in st.session_state:
     st.session_state.current_factor = "Flexibility"
@@ -216,7 +111,7 @@ def set_factor(f):
     st.rerun()
 
 @st.cache_data(show_spinner=False)
-def load_excel_fast(path: str):
+def load_excel_fast(path: Path):
     df0 = pd.read_excel(path, sheet_name=SHEET_NAME, engine="openpyxl")
     df0.columns = clean_names(df0.columns)
     df0.insert(0, "row_id", np.arange(1, len(df0) + 1))
@@ -249,16 +144,16 @@ def compute_efa_scores(likert_df_numeric: pd.DataFrame):
     fa.fit(likert_df_numeric)
     return fa.transform(likert_df_numeric)
 
-
 st.markdown(
     "<h2 style='text-align:center;margin-bottom:0.4rem;color:white;'>"
     "Remote Work Factor Analysis Dashboard</h2>",
     unsafe_allow_html=True,
 )
 
-if not os.path.exists(FILE_PATH):
+# ✅ Use Path.exists()
+if not FILE_PATH.exists():
     st.error("Excel not found. Fix FILE_PATH.")
-    st.code(FILE_PATH)
+    st.code(str(FILE_PATH))
     st.stop()
 
 df, likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col = load_excel_fast(FILE_PATH)
