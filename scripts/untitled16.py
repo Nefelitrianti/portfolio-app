@@ -205,11 +205,17 @@ df_clean["rem_h"]      = pd.to_numeric(df_clean[rem_col], errors="coerce")
 df_clean["off_h"]      = pd.to_numeric(df_clean[off_col], errors="coerce")
 df_clean["total_h"]    = df_clean["rem_h"] + df_clean["off_h"]
 df_clean["pct_remote"] = np.where(df_clean["total_h"] > 0, (df_clean["rem_h"] / df_clean["total_h"]) * 100, np.nan)
-df_clean["work_mode"]  = np.select(
-    [df_clean["pct_remote"] > 60, (df_clean["pct_remote"] >= 40) & (df_clean["pct_remote"] <= 60), df_clean["pct_remote"] < 40],
+df_clean["work_mode"] = np.select(
+    [
+        df_clean["pct_remote"] > 60,
+        (df_clean["pct_remote"] >= 40) & (df_clean["pct_remote"] <= 60),
+        df_clean["pct_remote"] < 40
+    ],
     ["Remote", "Hybrid", "Office"],
-    default=np.nan
+    default=""
 )
+
+df_clean["work_mode"] = df_clean["work_mode"].replace("", pd.NA)
 work_order = ["Office", "Hybrid", "Remote"]
 df_clean["work_mode"] = pd.Categorical(df_clean["work_mode"], categories=work_order, ordered=True)
 df_master = df_clean.dropna(subset=["work_mode"]).copy()
