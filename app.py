@@ -199,7 +199,7 @@ elif selected == "Projects":
           "Investment Dashboard": {
             "type": "powerbi",
             "summary": "KPIs and performance analytics.",
-            "image_path": "powerbi_dashboard.png",
+            "image_path": "assets/powerbi_dashboard.png",
         },
     }
 
