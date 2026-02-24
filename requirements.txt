@@ -1,0 +1,8 @@
+streamlit
+streamlit-option-menu
+pandas
+numpy
+plotly
+openpyxl
+factor-analyzer
+scipy
