@@ -157,7 +157,14 @@ if not FILE_PATH.exists():
     st.stop()
 
 df, likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col = load_excel_fast(FILE_PATH)
+st.write("Likert cols found:", len(likert_cols))
+st.write(likert_cols)
 
+st.write("rem_col:", rem_col)
+st.write("off_col:", off_col)
+
+st.write("Factor cols present:",
+         [c for c in df.columns if "factor" in c.lower()])
 
 for i in range(1, 5):
     if f"Factor{i}_score" not in df.columns:
