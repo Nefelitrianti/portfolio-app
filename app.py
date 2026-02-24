@@ -14,7 +14,11 @@ APP_DIR = Path(__file__).parent
 
 
 st.set_page_config(page_title="Portfolio-App", layout="wide")
-
+st.markdown("""
+<style>
+section[data-testid="stSidebar"] {display: none;}
+</style>
+""", unsafe_allow_html=True)
 selected = option_menu(
     menu_title=None,
     options=["Portfolio", "Projects"],
