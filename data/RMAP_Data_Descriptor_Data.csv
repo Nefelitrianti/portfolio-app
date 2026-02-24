@@ -1,0 +1,126 @@
+﻿Survey Question / Description;Conceptual Category
+It is important for me to have the flexibility to choose my work location.;Perceived Flexibility
+Remote work positively impacts my personal life.;Work-Life Balance / Well-being
+It is important for me to adjust my work schedule based on personal circumstances.;Perceived Flexibility
+I prefer remote work over in-office work.;Remote Work Preferences
+Remote work negatively impacts my career advancement (promotion, recognition, skill development).;Perceived Career Limitations
+I find it difficult to maintain a healthy work-life balance while working remotely.;Work-Life Balance
+I find remote work more challenging than in-office work (e.g., isolation, distractions, time zone differences).;Remote Work Challenges
+I feel less productive while working remotely (e.g., distractions, no focus, poor time management).;Perceived Productivity
+On average, how many hours per week do you work remotely?;Remote Work Modality
+On average, how many hours per week do you work in the office?;On-site Work Modality
+Did you change your geographic place of work since 2020?;Mobility / Relocation
+Have you changed your place of living due to favourable remote working arrangements since 2020?;Residential Relocation
+In which country was your last place of employment?;Past Employment Geography
+In which country was your last place of living?;Past Residential Geography
+Name the 5 most important reasons that led to your place of living relocation.;Motivations for Relocation
+How much time do you spend commuting to work (in minutes per commute)?;Commuting Patterns
+How do you usually commute to work (select all that apply)?;Mobility / Transport Mode
+Where do you prefer to work when working remotely? (e.g., home, third place, coworking space);Remote Work Setting
+Do you have access to the following amenities within a 15-minute walk, and how important are they to you?;Built Environment / Accessibility
+What is your current industry sector (NACE categories)?;Employment Sector
+Please share your employment status (e.g., employee, self-employed, unemployed, etc.);Employment Category
+In which country do you currently live?;Current Residence Geography
+In which country do you currently work?;Current Employment Geography
+What is your gender?;Demographic
+Your age in years;Demographic
+Total years of full-time education (from primary to higher education);Education Level
+Total years of professional working life;Employment Experience
+;
+ID;
+Response.ID;
+Date.submitted;
+Start.language;
+Would.you.like.to.select.a.different.language.;
+Before.proceeding..we.would.like.to.kindly.draw.your.attention.to.the.following.information...CONTENTWe.aim.to.gather.valuable.insights.into.workers..perceptions..intentions..and.needs.related.to.remote.working.arrangements..Your.participation.is.crucial.in.shaping.our.understanding.of.the.evolving.landscape.of.remote.work..Thank.you.for.being.a.part.of.this.important.initiative...PARTICIPATIONYour.participation.in.this.survey.is.entirely.voluntary..and.you.have.the.right.to.refuse.or.discontinue.your.involvement.at.any.point..Please.note.that.completion.of.the.survey.is.necessary.to.receive.payment..and.any.incomplete.data.will.not.be.used.or.considered.in.the.analysis...BENEFITSParticipation.in.this.survey.is.compensated.only.for.those.who.receive.invitations.through.Prolific..If.you.access.the.survey.from.any.other.source..your.contribution.is.voluntary.and.without.payment..This.R.MAP.project.101132497.has.received.funding.from.the.European.Commission.to.pay.participants...RISKSParticipating.in.this.survey.carries.no.foreseeable.risks..By.completing.the.questionnaire..you.provide.consent.for.the.generated.data.to.be.used.for.research.and.its.associated.purposes..The.results.will.be.openly.disseminated.through.various.channels..including.scientific.publications.and.public.reports..ensuring.anonymity...ANONYMITYWe.do.not.gather.any.personally.identifying.information..As.a.result..your.responses.will.be.kept.anonymous...CONTACTFor.more.information.please.visit.https...r.map.eu.privacy.policy..If.you.have.questions.at.any.time.about.the.study.or.the.procedures..you.may.contact.us.viaemail.at.team.rim.eu.com..ELECTRONIC.CONSENTPlease.select.your.choice.below.Clicking.on.the..Agree..button.indicates.that...You.agree.to.the.above.information...You.are.clearly.informed...You.voluntarily.agree.to.participate...You.will.get.paid.only.if.invited.via.Prolific.AND.provide.complete.data...Your.anonymous.answers.can.be.used.for.research.and.exploitation.purposes...You.are.18.years.of.age.or.older.;
+Please.rate.the.following.statements.regarding.remote.work.on.a.scale.from..1..strongly.disagree.to..7..strongly.agree.......It.is.important.for.me.to.have.the.flexibility.to.choose.my.work.location..;
+Please.rate.the.following.statements.regarding.remote.work.on.a.scale.from..1..strongly.disagree.to..7..strongly.agree.......Remote.work.positively.impacts.my.personal.life..;
+Please.rate.the.following.statements.regarding.remote.work.on.a.scale.from..1..strongly.disagree.to..7..strongly.agree.......It.is.important.for.me.to.adjust.my.work.schedule.based.on.personal.circumstances..;
+Please.rate.the.following.statements.regarding.remote.work.on.a.scale.from..1..strongly.disagree.to..7..strongly.agree.......I.prefer.remote.work.over.in.office.work..;
+Please.rate.the.following.statements.regarding.remote.work.on.a.scale.from..1..strongly.disagree.to..7..strongly.agree.......Remote.work.negatively.impacts.my.career.advancement..promotion..recognition..skill.development...;
+Please.rate.the.following.statements.regarding.remote.work.on.a.scale.from..1..strongly.disagree.to..7..strongly.agree.......I.find.it.difficult.to.maintain.a.healthy.work.life.balance.while.working.remotely..;
+Please.rate.the.following.statements.regarding.remote.work.on.a.scale.from..1..strongly.disagree.to..7..strongly.agree.......I.find.remote.work.more.challenging.than.in.office.work..e.g..isolation..more.distractions..time.zone.differences...;
+Please.rate.the.following.statements.regarding.remote.work.on.a.scale.from..1..strongly.disagree.to..7..strongly.agree.......I.feel.less.productive.while.working.remotely..more.distractions..no.focus..bad.time.management.etc....;
+On.average..what.amount.of.time.of.your.weekly.work.schedule.do.you.perform.remotely..in.the.office.......Remotely...Hours.;
+On.average..what.amount.of.time.of.your.weekly.work.schedule.do.you.perform.remotely..in.the.office.......In.the.Office..Hours.;
+When.working.remotely..where.do.you.prefer.to.work.from....;
+What.do.you.prefer.when.working.at.a.third.place.or.a.coworking.space...Availability.of.car.parking..;
+What.do.you.prefer.when.working.at.a.third.place.or.a.coworking.space...Accessibility.via.public.transport..;
+What.do.you.prefer.when.working.at.a.third.place.or.a.coworking.space...Proximity.within.walking.or.cycling.distance.from.home.;
+How.much.time.do.you.spend.on.commuting.to.work..in.minutes.per.commute..;
+How.do.you.usually.commute.to.work..please.pick.all.that.apply....On.foot.;
+How.do.you.usually.commute.to.work..please.pick.all.that.apply....Bicycle.;
+How.do.you.usually.commute.to.work..please.pick.all.that.apply....Scooter.Motorcycle..;
+How.do.you.usually.commute.to.work..please.pick.all.that.apply....Public.transport..Bus..Metro..Tram..Ferry..Train..;
+How.do.you.usually.commute.to.work..please.pick.all.that.apply....Car..personal...;
+How.do.you.usually.commute.to.work..please.pick.all.that.apply....Car..shared..;
+How.do.you.usually.commute.to.work..please.pick.all.that.apply....Not.applicable.;
+When.working.remotely..do.you.currently.have.access.to.the.following.amenities.within.a.15.minute.walk..If.so..please.indicate.whether.they.are.important.to.you....Childcare...Schools.;
+When.working.remotely..do.you.currently.have.access.to.the.following.amenities.within.a.15.minute.walk..If.so..please.indicate.whether.they.are.important.to.you....Restaurants..Cafes.;
+When.working.remotely..do.you.currently.have.access.to.the.following.amenities.within.a.15.minute.walk..If.so..please.indicate.whether.they.are.important.to.you....Grocery.store..Retail..e.g...laundry..stationary.shops.etc...;
+When.working.remotely..do.you.currently.have.access.to.the.following.amenities.within.a.15.minute.walk..If.so..please.indicate.whether.they.are.important.to.you....Park..Green.spaces.;
+When.working.remotely..do.you.currently.have.access.to.the.following.amenities.within.a.15.minute.walk..If.so..please.indicate.whether.they.are.important.to.you....Healthcare.facilities.;
+When.working.remotely..do.you.currently.have.access.to.the.following.amenities.within.a.15.minute.walk..If.so..please.indicate.whether.they.are.important.to.you....Leisure.activities..e.g...cinemas..theatres..shopping..;
+When.working.remotely..do.you.currently.have.access.to.the.following.amenities.within.a.15.minute.walk..If.so..please.indicate.whether.they.are.important.to.you....Sports.facilities.;
+When.working.remotely..do.you.currently.have.access.to.the.following.amenities.within.a.15.minute.walk..If.so..please.indicate.whether.they.are.important.to.you....Public.transport.connections.;
+Did.you.change.your.geographic.place.of.work.since.2020.....;
+In.which.world.region.was.your.last.place.of.employment.;
+In.which.country.was.your.last.place.of.employment.;
+In.which.country.was.your.last.place.of.employment..1;
+In.which.country.was.your.last.place.of.employment..2;
+In.which.country.was.your.last.place.of.employment..3;
+In.which.country.was.your.last.place.of.employment..4;
+Have.you.changed.your.place.of.living.due.to.favourable.remote.working.arrangements.since.2020.....;
+In.which.world.region.was.your.last.place.of.living.;
+In.which.country.was.your.last.place.of.living.;
+In.which.country.was.your.last.place.of.living..1;
+In.which.country.was.your.last.place.of.living..2;
+In.which.country.was.your.last.place.of.living..3;
+In.which.country.was.your.last.place.of.living..4;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Affordable.housing.options..;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Living.expenses.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Housing.size.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Change.in.Workplace..different.employer..enterprise..etc....;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Change.in.employee.services.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Retirement.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Schooling.for.children.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Health.reasons.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Proximity.to.workplace.area...co.working.spaces.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Working.conditions.and.working.environment.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Proximity.to.nature..;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Quality.of.life.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Safety..;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Digital.infrastructure..;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Proximity.to.family.and.friends.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Proximity.to.urban.area.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Proximity.to.rural.area.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Cultural.immersion.;
+Name.the.5.most.important.reasons.that.led.to.your.place.of.living.relocation.from.the.following.list...Access.to.a.like.minded.community..remote.workers..digital.nomads..;
+Please.share.your.employment.status.;
+In.which.world.region.do.you.currently.work.;
+In.which.country.do.you.currently.work.;
+In.which.country.do.you.currently.work..1;
+In.which.country.do.you.currently.work..2;
+In.which.country.do.you.currently.work..3;
+In.which.country.do.you.currently.work..4;
+Please.indicate.the.industry.sector.you.work.in.;
+In.which.world.region.do.you.currently.live.;
+In.which.country.do.you.currently.live.;
+In.which.country.do.you.currently.live..1;
+In.which.country.do.you.currently.live..2;
+In.which.country.do.you.currently.live..3;
+In.which.country.do.you.currently.live..4;
+What.is.your.gender.;
+Please.share.the.following...Your.age.in.years..;
+Please.share.the.following...Total.years.of.full.time.education..from.primary.school.to.higher.education...;
+Please.share.the.following...Total.years.of.professional.working.life..count.part.time.work.as.a.fraction..e.g...0.5.for.half.time.work...;
+Remote.Office.Work;
+Ethnicity.Simplified;
+Country.of.Residence;
+Nationality;
+Student.Status;
+Employment.Status;
+typology_last_place_of_work;
+typology_last_place_of_living;
+typology_current_place_of_work;
+typology_current_place_of_living;
