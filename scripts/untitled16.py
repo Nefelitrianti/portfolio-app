@@ -174,7 +174,19 @@ if USE_EFA and len(likert_cols) == 8:
     try:
         tmp = df[["row_id"] + likert_cols].copy()
         for c in likert_cols:
-            tmp[c] = tmp[c].map(LIKERT_MAP)
+            s = tmp[c]
+        
+            # 1) try numeric directly (if file stores 1..7)
+            s_num = pd.to_numeric(s, errors="coerce")
+        
+            # 2) if numeric missing, map from text labels
+            s_txt = s.astype(str).str.strip()
+            s_map = s_txt.map(LIKERT_MAP)
+        
+            # combine: use numeric when available else mapped
+            tmp[c] = s_num.fillna(s_map)
+
+        tmp = tmp.dropna(subset=likert_cols)
         tmp = tmp.dropna()
         if len(tmp) > 30:
             X = tmp[likert_cols].astype(float)
