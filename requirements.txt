@@ -1,11 +1,15 @@
-streamlit
-streamlit-option-menu
-numpy==1.26.4
-pandas==2.2.2
-scikit-learn==1.8.0
-factor-analyzer==0.5.1
-openpyxl
-plotly
-streamlit
+streamlit>=1.54
+streamlit-option-menu>=0.4.0
 
+pandas>=2.2
+numpy>=2.0
+scipy>=1.11
 
+scikit-learn>=1.4
+factor-analyzer>=0.5.1
+
+plotly>=5.22
+openpyxl>=3.1
+pillow>=10.0
+requests>=2.31
+joblib>=1.3
