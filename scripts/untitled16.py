@@ -7,8 +7,8 @@ import plotly.express as px
 
 
 from pathlib import Path
-SCRIPT_DIR = Path(__file__).parent          # scripts/
-FILE_PATH = SCRIPT_DIR.parent / "data" / "RMAP_Data_Descriptor_Data.xlsx"
+BASE_DIR = Path(__file__).resolve().parents[1]   # repo root
+FILE_PATH = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
 USE_EFA = True
 
 LIKERT_LEVELS = [
