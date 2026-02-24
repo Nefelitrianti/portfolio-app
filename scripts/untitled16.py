@@ -6,13 +6,11 @@ import streamlit as st
 import plotly.express as px
 from pathlib import Path
 
-# ── Page config ──────────────────────────────────────────────────────────────
+
 st.set_page_config(page_title="Global Social Impact Dashboard", layout="wide")
 
-# ══════════════════════════════════════════════════════════════════════════════
-# USER SETTINGS
-# ══════════════════════════════════════════════════════════════════════════════
-BASE_DIR   = Path.cwd()  # repo root
+
+BASE_DIR   = Path.cwd()  
 FILE_PATH  = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
 SHEET_NAME = "RMAP_Data_Descriptor_Data"
 USE_EFA    = True
