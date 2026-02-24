@@ -19,14 +19,7 @@ APP_DIR = Path(__file__).parent
 st.set_page_config(page_title="Portfolio-App", layout="wide")
 
 # Hide ONLY Streamlit multipage navigation (the left "app / Projects" list)
-st.markdown(
-    """
-    <style>
-    [data-testid="stSidebarNav"] {display: none !important;}
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+
 
 # -----------------------------
 # TOP NAV
