@@ -183,7 +183,7 @@ elif selected == "Projects":
         "Factor Analysis": {
             "type": "python_script",
             "summary": "Statistical factor analysis using Python. Explores underlying variables.",
-            "script_path": "untitled16.py", 
+            "script_path": "scripts/untitled16.py", 
         },
       
         "SES Earnings App": {
