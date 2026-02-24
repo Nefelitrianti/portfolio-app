@@ -254,18 +254,30 @@ def load_excel_fast(path: str):
     return df0[keep].copy(), likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col
 
 @st.cache_data(show_spinner=False)
-def compute_efa_scores(likert_json: str):
-    # ── FIX 1: patch sklearn ≥1.6 which renamed force_all_finite → ensure_all_finite
-    import sklearn.utils.validation as _skval
-    import inspect as _inspect
-    _sig = _inspect.signature(_skval.check_array).parameters
-    if "force_all_finite" not in _sig and "ensure_all_finite" in _sig:
-        _orig = _skval.check_array
-        def _patched(*a, force_all_finite=None, **kw):
-            if force_all_finite is not None:
-                kw.setdefault("ensure_all_finite", force_all_finite)
-            return _orig(*a, **kw)
-        _skval.check_array = _patched
+def compute_efa_scores(X_json: str):
+    """
+    Compute 4 factor scores.
+    Try factor_analyzer (oblimin + minres). If it fails (sklearn mismatch on cloud),
+    fall back to sklearn FactorAnalysis (no rotation).
+    """
+    X = pd.read_json(X_json)
+
+    # Try factor_analyzer first
+    try:
+        from factor_analyzer import FactorAnalyzer
+        fa = FactorAnalyzer(n_factors=4, rotation="oblimin", method="minres")
+        fa.fit(X)
+        scores = fa.transform(X)
+        method_used = "factor_analyzer (minres + oblimin)"
+    except Exception as e:
+        # Fallback: sklearn FactorAnalysis
+        from sklearn.decomposition import FactorAnalysis
+        fa = FactorAnalysis(n_components=4, random_state=0)
+        scores = fa.fit_transform(X)
+        method_used = f"sklearn FactorAnalysis fallback (no rotation). Reason: {type(e).__name__}"
+
+    out = pd.DataFrame(scores, columns=[f"Factor{i}_score" for i in range(1, 5)], index=X.index)
+    return out, method_used
 
     from factor_analyzer import FactorAnalyzer
     X = pd.read_json(likert_json)
