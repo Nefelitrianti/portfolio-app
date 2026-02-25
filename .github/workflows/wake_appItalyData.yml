@@ -1,0 +1,13 @@
+name: Wake RShiny App Italy Data
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Shiny App
+        run: curl -I https://nefelitrianti.shinyapps.io/data_italy/ || true
