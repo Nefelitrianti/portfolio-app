@@ -195,7 +195,7 @@ elif selected == "Projects":
             "summary": "EU Structure of Earnings Survey explorer.",
             "url": "https://nefelitrianti.shinyapps.io/ses-earnings/",
         },
-        "Italy Data 1960-2020": {
+        "Italy Data 1954-2020": {
             "type": "shiny",
             "summary": "Demographic Data Italy 1960-2020.",
             "url": "https://nefelitrianti.shinyapps.io/data_italy/",
