@@ -2,7 +2,7 @@ name: Wake RShiny App Italy Data
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
