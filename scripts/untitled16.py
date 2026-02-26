@@ -470,13 +470,14 @@ else:
 
     fig = px.bar(
         agg_full,
-        x="Work mode",
+        x="work_mode",
         y="mean_score",
-        color="Work mode",
+        color="work_mode",
         facet_col=demo_var,
         text="label_text",
         title=f"Analysis of {f_label} Grouped by {group_label}",
         category_orders={"work_mode": work_order},
+        labels={"work_mode": "Work Mode"}
     )
     fig.update_traces(textposition="outside")
     fig.for_each_annotation(lambda a: a.update(
