@@ -72,8 +72,8 @@ Structure of Earning Survey Analysis (EU 2010–2022)
 
 
 Italy Demography Data (1954–2020)
+<img width="1862" height="891" alt="image" src="https://github.com/user-attachments/assets/4bef4e62-bf24-4891-bc8c-311d52f015de" />
 
-<img width="1893" height="883" alt="image" src="https://github.com/user-attachments/assets/c41e4b43-3590-40e0-845f-33b5a6291a34" />
 
 
 Financial Portfolio Estimation 
