@@ -54,7 +54,11 @@ Screenshots
 Portfolio Home
 
 <img width="1601" height="806" alt="Στιγμιότυπο οθόνης 2026-02-26 100559" src="https://github.com/user-attachments/assets/2ddfaf39-c4d0-4f11-83f5-71c9ab048f94" />
-<img width="1601" height="806" alt="Στιγμιότυπο οθόνης 2026-02-26 100559" src="https://github.com/user-attachments/assets/e9f0c967-7610-4df8-81e5-8c7706906546" />
+
+
+Projects Home 
+
+<img width="1625" height="845" alt="image" src="https://github.com/user-attachments/assets/b4d83490-eac7-4321-b59d-96c6acc79a16" />
 
 
 Bayesian Factor Analysis (RMAP)
