@@ -60,10 +60,11 @@ Projects Home
 
 <img width="1625" height="845" alt="image" src="https://github.com/user-attachments/assets/b4d83490-eac7-4321-b59d-96c6acc79a16" />
 
-
 Remote Analysis Dashboard
 
 <img width="1853" height="910" alt="image" src="https://github.com/user-attachments/assets/e3952dfd-8ade-433d-ab5e-8d1fb31ea154" />
+
+
 
 
 Structure of Earning Survey Analysis (EU 2010–2022)
