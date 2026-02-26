@@ -480,8 +480,8 @@ else:
         labels={"work_mode": "Work Mode"}
     )
     fig.update_traces(
-    textposition='inside', 
-    insidetextanchor='middle'
+    textposition='outside'
+    
 )
     fig.for_each_annotation(lambda a: a.update(
         text=a.text.split("=")[-1].strip()
