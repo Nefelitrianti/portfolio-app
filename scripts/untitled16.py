@@ -479,7 +479,10 @@ else:
         category_orders={"work_mode": work_order},
         labels={"work_mode": "Work Mode"}
     )
-    fig.update_traces(textposition="outside")
+    fig.update_traces(
+    textposition='inside', 
+    insidetextanchor='middle'
+)
     fig.for_each_annotation(lambda a: a.update(
         text=a.text.split("=")[-1].strip()
     ))
