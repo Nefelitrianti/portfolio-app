@@ -55,11 +55,12 @@ Portfolio Home
 
 <img width="1601" height="806" alt="Στιγμιότυπο οθόνης 2026-02-26 100559" src="https://github.com/user-attachments/assets/2ddfaf39-c4d0-4f11-83f5-71c9ab048f94" />
 
-
+______________________________________________________________________________________________________________________________________________________________________________________________________________________
 Projects Home 
 
 <img width="1625" height="845" alt="image" src="https://github.com/user-attachments/assets/b4d83490-eac7-4321-b59d-96c6acc79a16" />
 
+______________________________________________________________________________________________________________________________________________________________________________________________________________________
 Remote Analysis Dashboard
 
 <img width="1853" height="910" alt="image" src="https://github.com/user-attachments/assets/e3952dfd-8ade-433d-ab5e-8d1fb31ea154" />
@@ -78,7 +79,7 @@ Italy Demography Data (1954–2020)
 <img width="1862" height="891" alt="image" src="https://github.com/user-attachments/assets/4bef4e62-bf24-4891-bc8c-311d52f015de" />
 
 
-
+______________________________________________________________________________________________________________________________________________________________________________________________________________________
 Financial Portfolio Estimation 
 
 <img width="1353" height="756" alt="image" src="https://github.com/user-attachments/assets/78d7ac14-1587-4086-b436-eb9822060c52" />
