@@ -61,20 +61,24 @@ Projects Home
 <img width="1625" height="845" alt="image" src="https://github.com/user-attachments/assets/b4d83490-eac7-4321-b59d-96c6acc79a16" />
 
 
-Bayesian Factor Analysis (RMAP)
+Remote Analysis Dashboard
 
-(add image here)
+<img width="1853" height="910" alt="image" src="https://github.com/user-attachments/assets/e3952dfd-8ade-433d-ab5e-8d1fb31ea154" />
 
-SES Wage Analysis (EU 2010–2022)
 
-(add image here)
+Structure of Earning Survey Analysis (EU 2010–2022)
 
-Italy Long-run Economic Data (1954–2020)
+<img width="1897" height="923" alt="image" src="https://github.com/user-attachments/assets/68bd7509-231e-4671-8359-aa06619a2055" />
 
-(add image here)
 
-Financial Portfolio Estimation (6 Stocks)
+Italy Demography Data (1954–2020)
 
-(add image here)
+<img width="1893" height="883" alt="image" src="https://github.com/user-attachments/assets/c41e4b43-3590-40e0-845f-33b5a6291a34" />
 
-Αν θες, το κάνω 100% έτοιμο με σωστά markdown για screenshots, π.χ.:
+
+Financial Portfolio Estimation 
+
+<img width="1353" height="756" alt="image" src="https://github.com/user-attachments/assets/78d7ac14-1587-4086-b436-eb9822060c52" />
+
+
+
