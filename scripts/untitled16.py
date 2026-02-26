@@ -470,9 +470,9 @@ else:
 
     fig = px.bar(
         agg_full,
-        x="work_mode",
+        x="Work mode",
         y="mean_score",
-        color="work_mode",
+        color="Work mode",
         facet_col=demo_var,
         text="label_text",
         title=f"Analysis of {f_label} Grouped by {group_label}",
