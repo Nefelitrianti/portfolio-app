@@ -168,37 +168,22 @@ def make_label(f_label, mean_value):
 
 
 def find_hours_cols(cols):
-    """Find remote-hours and office-hours columns robustly."""
     cols = list(cols)
 
-    remote_candidates = [
+    rem_candidates = [
         c for c in cols
-        if "remotely" in c and "hours" in c and "office" not in c
+        if c.endswith("_remotely_hours")
     ]
 
-    office_candidates = [
+    off_candidates = [
         c for c in cols
-        if "office" in c and "hours" in c
+        if c.endswith("_in_the_office_hours")
     ]
 
-    # Fallbacks for verbose survey-export column names.
-    if not remote_candidates:
-        remote_candidates = [
-            c for c in cols
-            if "remot" in c and "hour" in c and "office" not in c
-        ]
+    rem_col = rem_candidates[0] if rem_candidates else None
+    off_col = off_candidates[0] if off_candidates else None
 
-    if not office_candidates:
-        office_candidates = [
-            c for c in cols
-            if "in_the_office" in c and "hour" in c
-        ]
-
-    rem_col = remote_candidates[0] if remote_candidates else None
-    off_col = office_candidates[0] if office_candidates else None
     return rem_col, off_col
-
-
 def detect_likert_columns(df):
     """
     Detect the 8 Likert items.
