@@ -1,49 +1,98 @@
 import os
 import re
-import numpy as np
-import pandas as pd
-import streamlit as st
-import plotly.express as px
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import streamlit as st
 
-st.set_page_config(page_title="Global Social Impact Dashboard", layout="wide")
+
+# -----------------------------------------------------------------------------
+# MULTIPAGE NOTE
+# -----------------------------------------------------------------------------
+# Put this file inside the project's /pages folder.
+# Keep st.set_page_config(...) in app.py only, to avoid page-config conflicts.
 
 
-BASE_DIR   = Path.cwd()  
-FILE_PATH  = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
+# -----------------------------------------------------------------------------
+# SETTINGS
+# -----------------------------------------------------------------------------
+THIS_DIR = Path(__file__).resolve().parent
+BASE_DIR = THIS_DIR.parent if THIS_DIR.name == "pages" else THIS_DIR
+FILE_PATH = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
 SHEET_NAME = "RMAP_Data_Descriptor_Data"
-USE_EFA    = True
+USE_EFA = True
+MIN_EFA_ROWS = 31
+EXPECTED_LIKERT_ITEMS = 8
 
 
+# -----------------------------------------------------------------------------
+# CONSTANTS
+# -----------------------------------------------------------------------------
 LIKERT_LEVELS = [
-    "Strongly Disagree", "Disagree", "Somewhat Disagree",
-    "Neither Agree nor Disagree", "Somewhat Agree", "Agree", "Strongly Agree"
+    "Strongly Disagree",
+    "Disagree",
+    "Somewhat Disagree",
+    "Neither Agree nor Disagree",
+    "Somewhat Agree",
+    "Agree",
+    "Strongly Agree",
 ]
 LIKERT_MAP = {k: i + 1 for i, k in enumerate(LIKERT_LEVELS)}
 
-factor_labels = ["Flexibility", "Challenges", "Career Anxiety", "WLB Struggle"]
+factor_labels = [
+    "Flexibility",
+    "Challenges",
+    "Career Anxiety",
+    "WLB Struggle",
+]
+
 factor_to_col = {
     "Flexibility": "Factor1_score",
     "Challenges": "Factor2_score",
     "Career Anxiety": "Factor3_score",
     "WLB Struggle": "Factor4_score",
 }
+
 factor_defs = {
     "Flexibility": "Control over work schedule.",
     "Challenges": "Technical/social barriers.",
     "Career Anxiety": "Fear of missing promotions.",
     "WLB Struggle": "Home/work boundaries.",
 }
-demo_label_map = {"gender_f": "Gender", "age_group": "Age Group", "ethnicity_f": "Ethnicity"}
+
+demo_label_map = {
+    "gender_f": "Gender",
+    "age_group": "Age Group",
+    "ethnicity_f": "Ethnicity",
+}
 
 bf_lookup = {
-    "gender_f": {"Flexibility": "1.08e+25", "Challenges": "6.15e+07", "Career Anxiety": "0.08", "WLB Struggle": "3.63"},
-    "age_group": {"Flexibility": "1.05e+17", "Challenges": "1.97e+64", "Career Anxiety": "9.53e+13", "WLB Struggle": "1.37e+27"},
-    "ethnicity_f": {"Flexibility": "4.21e+05", "Challenges": "1.12e+03", "Career Anxiety": "0.12", "WLB Struggle": "0.95"},
+    "gender_f": {
+        "Flexibility": "1.08e+25",
+        "Challenges": "6.15e+07",
+        "Career Anxiety": "0.08",
+        "WLB Struggle": "3.63",
+    },
+    "age_group": {
+        "Flexibility": "1.05e+17",
+        "Challenges": "1.97e+64",
+        "Career Anxiety": "9.53e+13",
+        "WLB Struggle": "1.37e+27",
+    },
+    "ethnicity_f": {
+        "Flexibility": "4.21e+05",
+        "Challenges": "1.12e+03",
+        "Career Anxiety": "0.12",
+        "WLB Struggle": "0.95",
+    },
 }
 
 
+# -----------------------------------------------------------------------------
+# HELPERS
+# -----------------------------------------------------------------------------
 def clean_names(cols):
     out = []
     for c in cols:
@@ -53,72 +102,288 @@ def clean_names(cols):
         out.append(c)
     return out
 
+
 def to_num(series):
-    return pd.to_numeric(series.astype(str).str.replace(",", ".", regex=False), errors="coerce")
+    return pd.to_numeric(
+        series.astype(str).str.replace(",", ".", regex=False),
+        errors="coerce",
+    )
+
 
 def likert_to_num(series):
-    """Robust Likert converter: handles text labels AND already-numeric 1-7 values."""
+    """Convert Likert text labels or already-numeric values 1–7 to floats."""
     ci_map = {k.strip().lower(): v for k, v in LIKERT_MAP.items()}
+
     def _convert(val):
         if pd.isna(val):
             return np.nan
+
+        text = str(val).strip()
+
         try:
-            n = float(str(val).replace(",", "."))
+            n = float(text.replace(",", "."))
             if 1 <= n <= 7:
-                return n
-        except ValueError:
+                return float(n)
+        except (ValueError, TypeError):
             pass
-        return ci_map.get(str(val).strip().lower(), np.nan)
+
+        return float(ci_map.get(text.lower(), np.nan))
+
     return series.apply(_convert)
+
 
 def evidence_text_from_bf(bf_val):
     try:
         bf = float(bf_val)
-    except:
+    except (TypeError, ValueError):
         return ""
-    if bf > 100: return "Extreme evidence (supports H₁)."
-    if bf > 30:  return "Very strong evidence (supports H₁)."
-    if bf > 10:  return "Strong evidence (supports H₁)."
-    if bf > 3:   return "Moderate evidence (supports H₁)."
-    if bf < 1:   return "Evidence favors H₀ (no difference)."
+
+    if bf > 100:
+        return "Extreme evidence (supports H₁)."
+    if bf > 30:
+        return "Very strong evidence (supports H₁)."
+    if bf > 10:
+        return "Strong evidence (supports H₁)."
+    if bf > 3:
+        return "Moderate evidence (supports H₁)."
+    if bf < 1:
+        return "Evidence favors H₀ (no difference)."
     return "Anecdotal / weak evidence."
 
-def make_label(f_label, m):
-    if pd.isna(m):
+
+def make_label(f_label, mean_value):
+    if pd.isna(mean_value):
         return ""
+
     if f_label == "Flexibility":
-        return "Less Flexible" if m < 0 else "More Flexible"
+        return "Less Flexible" if mean_value < 0 else "More Flexible"
     if f_label == "Challenges":
-        return "Fewer Barriers" if m < 0 else "More Barriers"
+        return "Fewer Barriers" if mean_value < 0 else "More Barriers"
     if f_label == "Career Anxiety":
-        return "Less Anxious" if m < 0 else "More Anxious"
+        return "Less Anxious" if mean_value < 0 else "More Anxious"
     if f_label == "WLB Struggle":
-        return "Better WLB" if m < 0 else "Struggling WLB"
+        return "Better WLB" if mean_value < 0 else "Struggling WLB"
     return ""
 
+
 def find_hours_cols(cols):
-    STEM = "on_average_what_amount_of_time_of_your_weekly_work_schedule_do_you_perform_remotely_in_the_office"
+    """Find remote-hours and office-hours columns robustly."""
     cols = list(cols)
-    rem_candidates = [c for c in cols if STEM in c and "remotely" in c and "hours" in c and not c.endswith("in_the_office_hours")]
-    off_candidates = [c for c in cols if STEM in c and c.endswith("in_the_office_hours")]
-    if not off_candidates:
-        off_candidates = [c for c in cols if STEM in c and "in_the_office" in c and "hours" in c]
-    if not rem_candidates:
-        rem_candidates = [c for c in cols if ("remotely" in c and "hours" in c)]
-    if not off_candidates:
-        off_candidates = [c for c in cols if ("in_the_office" in c and "hours" in c)]
-    return (rem_candidates[0] if rem_candidates else None, off_candidates[0] if off_candidates else None)
+
+    remote_candidates = [
+        c for c in cols
+        if "remotely" in c and "hours" in c and "office" not in c
+    ]
+
+    office_candidates = [
+        c for c in cols
+        if "office" in c and "hours" in c
+    ]
+
+    # Fallbacks for verbose survey-export column names.
+    if not remote_candidates:
+        remote_candidates = [
+            c for c in cols
+            if "remot" in c and "hour" in c and "office" not in c
+        ]
+
+    if not office_candidates:
+        office_candidates = [
+            c for c in cols
+            if "in_the_office" in c and "hour" in c
+        ]
+
+    rem_col = remote_candidates[0] if remote_candidates else None
+    off_col = office_candidates[0] if office_candidates else None
+    return rem_col, off_col
 
 
-if __name__ == "__main__" or not st.session_state.get("_page_config_set"):
+def detect_likert_columns(df):
+    """
+    Detect the 8 Likert items.
+
+    First use the original questionnaire prefix. If that does not return exactly
+    8 columns, use a conservative value-based fallback: most non-missing values
+    must be valid Likert labels / values 1–7.
+    """
+    needed_prefix = "please_rate_the_following_statements"
+    prefix_matches = [
+        c for c in df.columns
+        if c.startswith(needed_prefix)
+    ]
+
+    if len(prefix_matches) >= EXPECTED_LIKERT_ITEMS:
+        return prefix_matches[:EXPECTED_LIKERT_ITEMS], "question-prefix"
+
+    excluded_tokens = (
+        "age",
+        "gender",
+        "ethnicity",
+        "education",
+        "remote",
+        "remotely",
+        "office",
+        "hours",
+        "row_id",
+        "factor",
+    )
+
+    fallback = []
+
+    for c in df.columns:
+        if c in prefix_matches:
+            continue
+        if any(token in c for token in excluded_tokens):
+            continue
+
+        s = df[c].dropna()
+        if len(s) < MIN_EFA_ROWS:
+            continue
+
+        converted = likert_to_num(s)
+        valid_ratio = converted.notna().mean()
+        unique_valid = converted.dropna().nunique()
+
+        if valid_ratio >= 0.80 and 2 <= unique_valid <= 7:
+            fallback.append(c)
+
+    candidates = prefix_matches + fallback
+    candidates = list(dict.fromkeys(candidates))
+
+    if len(candidates) >= EXPECTED_LIKERT_ITEMS:
+        return candidates[:EXPECTED_LIKERT_ITEMS], "fallback-value-detection"
+
+    return candidates, "incomplete-detection"
+
+
+# -----------------------------------------------------------------------------
+# DATA + EFA FUNCTIONS
+# -----------------------------------------------------------------------------
+@st.cache_data(show_spinner=False)
+def load_excel_fast(path: str):
+    df0 = pd.read_excel(
+        path,
+        sheet_name=SHEET_NAME,
+        engine="openpyxl",
+    )
+
+    df0.columns = clean_names(df0.columns)
+
+    if "row_id" in df0.columns:
+        df0 = df0.drop(columns=["row_id"])
+
+    df0.insert(0, "row_id", np.arange(1, len(df0) + 1))
+
+    likert_cols, likert_detection_method = detect_likert_columns(df0)
+
+    edu_col = (
+        "please_share_the_following_total_years_of_full_time_education_"
+        "from_primary_school_to_higher_education"
+    )
+    age_col = "please_share_the_following_your_age_in_years"
+    gender_col = "what_is_your_gender"
+    eth_col = "ethnicity_simplified"
+
+    rem_col, off_col = find_hours_cols(df0.columns)
+
+    keep = ["row_id"]
+
+    for c in likert_cols:
+        if c in df0.columns and c not in keep:
+            keep.append(c)
+
+    for c in [edu_col, age_col, gender_col, eth_col, rem_col, off_col]:
+        if c is not None and c in df0.columns and c not in keep:
+            keep.append(c)
+
+    return (
+        df0[keep].copy(),
+        likert_cols,
+        likert_detection_method,
+        rem_col,
+        off_col,
+        edu_col,
+        age_col,
+        gender_col,
+        eth_col,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def compute_efa_scores(X: pd.DataFrame):
+    """Run four-factor EFA directly from a DataFrame.
+
+    This avoids pandas interpreting a JSON string as a file path
+    on some Streamlit/Pandas versions.
+    """
+    X = X.copy()
+
+    if X.shape[1] != EXPECTED_LIKERT_ITEMS:
+        raise ValueError(
+            f"EFA expected {EXPECTED_LIKERT_ITEMS} Likert variables, "
+            f"but received {X.shape[1]}."
+        )
+
+    if X.shape[0] < MIN_EFA_ROWS:
+        raise ValueError(
+            f"EFA needs at least {MIN_EFA_ROWS} complete rows; "
+            f"only {X.shape[0]} were available."
+        )
+
+    # A column with no variance makes factor models invalid / unstable.
+    zero_variance = X.columns[X.nunique(dropna=True) <= 1].tolist()
+    if zero_variance:
+        raise ValueError(
+            "EFA cannot run because these Likert columns have no variance: "
+            + ", ".join(zero_variance)
+        )
+
     try:
-        st.set_page_config(page_title="Global Social Impact Dashboard", layout="wide")
-        st.session_state["_page_config_set"] = True
-    except Exception:
-        pass
+        from factor_analyzer import FactorAnalyzer
+
+        fa = FactorAnalyzer(
+            n_factors=4,
+            rotation="oblimin",
+            method="minres",
+        )
+        fa.fit(X)
+        scores = fa.transform(X)
+        method_used = "factor_analyzer (minres + oblimin)"
+
+    except Exception as factor_error:
+        try:
+            from sklearn.decomposition import FactorAnalysis
+
+            fa = FactorAnalysis(
+                n_components=4,
+                random_state=0,
+            )
+            scores = fa.fit_transform(X)
+            method_used = (
+                "sklearn FactorAnalysis fallback "
+                f"({type(factor_error).__name__} in factor_analyzer)"
+            )
+        except Exception as sklearn_error:
+            raise RuntimeError(
+                "Both factor-analysis engines failed. "
+                f"factor_analyzer: {factor_error}; "
+                f"sklearn: {sklearn_error}"
+            ) from sklearn_error
+
+    score_df = pd.DataFrame(
+        scores,
+        columns=[f"Factor{i}_score" for i in range(1, 5)],
+        index=X.index,
+    )
+
+    return score_df, method_used
 
 
-st.markdown("""
+# -----------------------------------------------------------------------------
+# CSS
+# -----------------------------------------------------------------------------
+st.markdown(
+    """
 <style>
 html, body,
 [data-testid="stAppViewContainer"],
@@ -214,259 +479,435 @@ section[data-testid="stSidebar"] *:not(.hypothesis-box):not(.hypothesis-box *) {
     color: #ffffff !important;
 }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
+# -----------------------------------------------------------------------------
+# SESSION STATE
+# -----------------------------------------------------------------------------
 if "current_factor" not in st.session_state:
     st.session_state.current_factor = "Flexibility"
 
-def set_factor(f):
-    st.session_state.current_factor = f
+
+def set_factor(factor_name):
+    st.session_state.current_factor = factor_name
     st.rerun()
 
-@st.cache_data(show_spinner=False)
-def load_excel_fast(path: str):
-    df0 = pd.read_excel(path, sheet_name=SHEET_NAME, engine="openpyxl")
-    df0.columns = clean_names(df0.columns)
-    df0.insert(0, "row_id", np.arange(1, len(df0) + 1))
 
-    needed_prefix = "please_rate_the_following_statements"
-    likert_cols = [c for c in df0.columns if c.startswith(needed_prefix)][:8]
-
-    edu_col    = "please_share_the_following_total_years_of_full_time_education_from_primary_school_to_higher_education"
-    age_col    = "please_share_the_following_your_age_in_years"
-    gender_col = "what_is_your_gender"
-    eth_col    = "ethnicity_simplified"
-
-    rem_col, off_col = find_hours_cols(df0.columns)
-
-    keep = ["row_id"] + likert_cols
-    for c in [edu_col, age_col, gender_col, eth_col, rem_col, off_col]:
-        if c is not None and c in df0.columns and c not in keep:
-            keep.append(c)
-    for i in range(1, 5):
-        c = f"Factor{i}_score"
-        if c in df0.columns and c not in keep:
-            keep.append(c)
-
-    return df0[keep].copy(), likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col
-
-@st.cache_data(show_spinner=False)
-def compute_efa_scores(X_json: str):
-    X = pd.read_json(X_json)
-
-    # Always try factor_analyzer, but fall back safely on ANY failure
-    try:
-        from factor_analyzer import FactorAnalyzer
-        fa = FactorAnalyzer(n_factors=4, rotation="oblimin", method="minres")
-        fa.fit(X)
-        scores = fa.transform(X)
-        method_used = "factor_analyzer (minres + oblimin)"
-    except Exception as e:
-        from sklearn.decomposition import FactorAnalysis
-        fa = FactorAnalysis(n_components=4, random_state=0)
-        scores = fa.fit_transform(X)
-        method_used = f"sklearn FactorAnalysis (fallback, no rotation). Reason: {type(e).__name__}"
-
-    out = pd.DataFrame(scores, columns=[f"Factor{i}_score" for i in range(1, 5)], index=X.index)
-    return out, method_used
-
-    from factor_analyzer import FactorAnalyzer
-    X = pd.read_json(likert_json)
-    fa = FactorAnalyzer(n_factors=4, rotation="oblimin", method="minres")
-    fa.fit(X)
-    scores = fa.transform(X)
-    return pd.DataFrame(scores, columns=[f"Factor{i}_score" for i in range(1, 5)],
-                        index=X.index)
-
-
+# -----------------------------------------------------------------------------
+# HEADER
+# -----------------------------------------------------------------------------
 st.markdown(
     "<h2 style='text-align:center;margin-bottom:0.4rem;color:white;'>"
     "Remote Work Factor Analysis Dashboard</h2>",
     unsafe_allow_html=True,
 )
 
-if not os.path.exists(FILE_PATH):
-    st.error("Excel not found. Fix FILE_PATH.")
-    st.code(FILE_PATH)
+
+# -----------------------------------------------------------------------------
+# LOAD EXCEL
+# -----------------------------------------------------------------------------
+if not FILE_PATH.exists():
+    st.error("Excel not found. Expected file:")
+    st.code(str(FILE_PATH))
     st.stop()
 
-df, likert_cols, rem_col, off_col, edu_col, age_col, gender_col, eth_col = load_excel_fast(FILE_PATH)
+try:
+    (
+        df,
+        likert_cols,
+        likert_detection_method,
+        rem_col,
+        off_col,
+        edu_col,
+        age_col,
+        gender_col,
+        eth_col,
+    ) = load_excel_fast(str(FILE_PATH))
+except ValueError as e:
+    st.error(
+        f"Could not read sheet '{SHEET_NAME}' from the Excel workbook."
+    )
+    st.exception(e)
+    st.stop()
+except Exception as e:
+    st.error("The Excel workbook could not be loaded.")
+    st.exception(e)
+    st.stop()
 
-for i in range(1, 5):
-    if f"Factor{i}_score" not in df.columns:
-        df[f"Factor{i}_score"] = np.nan
 
-if USE_EFA and len(likert_cols) == 8:
+# -----------------------------------------------------------------------------
+# FACTOR ANALYSIS
+# -----------------------------------------------------------------------------
+efa_method_used = "Not run"
+complete_efa_rows = 0
+
+if USE_EFA:
+    if len(likert_cols) != EXPECTED_LIKERT_ITEMS:
+        st.error(
+            f"Factor analysis cannot run: detected {len(likert_cols)} Likert "
+            f"columns, but {EXPECTED_LIKERT_ITEMS} are required."
+        )
+        with st.expander("EFA diagnostics"):
+            st.write("Detection method:", likert_detection_method)
+            st.write("Detected Likert columns:")
+            st.write(likert_cols)
+        st.stop()
+
     try:
         tmp = df[["row_id"] + likert_cols].copy()
+
         for c in likert_cols:
             tmp[c] = likert_to_num(tmp[c])
 
-        tmp = tmp.dropna(subset=likert_cols)
+        invalid_counts = {
+            c: int(tmp[c].isna().sum())
+            for c in likert_cols
+        }
 
-        if len(tmp) > 30:
-            X = tmp[likert_cols].astype(float)
+        tmp_complete = tmp.dropna(subset=likert_cols).copy()
+        complete_efa_rows = len(tmp_complete)
 
-            sc_df, method_used = compute_efa_scores(X.to_json())
-            sc_df = sc_df.copy()
-            sc_df["row_id"] = tmp["row_id"].values
+        if complete_efa_rows < MIN_EFA_ROWS:
+            st.error(
+                f"Factor analysis cannot run: only {complete_efa_rows} complete "
+                f"Likert rows are available; at least {MIN_EFA_ROWS} are required."
+            )
+            with st.expander("EFA diagnostics"):
+                st.write("Detection method:", likert_detection_method)
+                st.write("Detected Likert columns:", likert_cols)
+                st.write("Missing / invalid values per Likert item:", invalid_counts)
+            st.stop()
 
-            
+        X = tmp_complete[likert_cols].astype(float)
 
-            df = df.drop(columns=[f"Factor{i}_score" for i in range(1, 5)], errors="ignore")
-            df = df.merge(sc_df, on="row_id", how="left")
-        else:
-            st.warning(f"Only {len(tmp)} complete Likert rows found — need >30 for EFA.")
+        sc_df, efa_method_used = compute_efa_scores(X)
+
+        # Attach row IDs positionally to the complete respondent rows.
+        sc_df = sc_df.reset_index(drop=True)
+        sc_df["row_id"] = tmp_complete["row_id"].to_numpy()
+
+        df = df.drop(
+            columns=[f"Factor{i}_score" for i in range(1, 5)],
+            errors="ignore",
+        )
+        df = df.merge(sc_df, on="row_id", how="left")
+
     except Exception as e:
-        st.error(f"EFA failed: {e}")
+        st.error("Factor analysis failed.")
+        st.exception(e)
+        st.stop()
 
+else:
+    # If EFA is disabled, the script requires pre-computed factor columns.
+    missing_factor_cols = [
+        f"Factor{i}_score"
+        for i in range(1, 5)
+        if f"Factor{i}_score" not in df.columns
+    ]
+    if missing_factor_cols:
+        st.error(
+            "USE_EFA is False, but pre-computed factor score columns are missing: "
+            + ", ".join(missing_factor_cols)
+        )
+        st.stop()
+
+
+# Verify that factor scores really exist after EFA.
 for i in range(1, 5):
-    df[f"Factor{i}_score"] = pd.to_numeric(df[f"Factor{i}_score"], errors="coerce")
+    col = f"Factor{i}_score"
+    if col not in df.columns:
+        st.error(f"Factor-score column '{col}' was not created.")
+        st.stop()
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+
+if df[[f"Factor{i}_score" for i in range(1, 5)]].notna().sum().sum() == 0:
+    st.error("EFA completed without producing any usable factor scores.")
+    st.stop()
 
 
+# -----------------------------------------------------------------------------
+# CLEAN DEMOGRAPHIC + WORK-MODE VARIABLES
+# -----------------------------------------------------------------------------
 df_clean = df.copy()
-df_clean["edu_years"] = to_num(df_clean[edu_col]) if edu_col in df_clean.columns else np.nan
-df_clean["age_num"]   = pd.to_numeric(df_clean[age_col], errors="coerce") if age_col in df_clean.columns else np.nan
-df_clean["age_group"] = pd.cut(df_clean["age_num"], bins=[-np.inf, 30, 50, np.inf], labels=["Young", "Mid", "Senior"])
-df_clean["gender_f"]  = df_clean.get(gender_col, np.nan)
-df_clean["gender_f"]  = df_clean["gender_f"].where(df_clean["gender_f"].isin(["Female", "Male"]), np.nan)
+
+if edu_col in df_clean.columns:
+    df_clean["edu_years"] = to_num(df_clean[edu_col])
+else:
+    df_clean["edu_years"] = np.nan
+
+if age_col in df_clean.columns:
+    df_clean["age_num"] = pd.to_numeric(
+        df_clean[age_col],
+        errors="coerce",
+    )
+else:
+    df_clean["age_num"] = np.nan
+
+
+df_clean["age_group"] = pd.cut(
+    df_clean["age_num"],
+    bins=[-np.inf, 30, 50, np.inf],
+    labels=["Young", "Mid", "Senior"],
+)
+
+if gender_col in df_clean.columns:
+    gender_text = df_clean[gender_col].astype("string").str.strip().str.title()
+    df_clean["gender_f"] = gender_text.where(
+        gender_text.isin(["Female", "Male"]),
+        np.nan,
+    )
+else:
+    df_clean["gender_f"] = np.nan
 
 if eth_col in df_clean.columns:
-    df_clean["ethnicity_f"] = df_clean[eth_col].where(
-        df_clean[eth_col].isin(["Asian", "Black", "Mixed", "Other", "White"]), np.nan
+    ethnicity_text = df_clean[eth_col].astype("string").str.strip().str.title()
+    allowed_ethnicity = ["Asian", "Black", "Mixed", "Other", "White"]
+    df_clean["ethnicity_f"] = ethnicity_text.where(
+        ethnicity_text.isin(allowed_ethnicity),
+        np.nan,
     )
 else:
     df_clean["ethnicity_f"] = np.nan
 
+
 if rem_col is None or off_col is None:
-    st.error("Remote/office hours columns not found.")
+    st.error(
+        "Remote/office hours columns were not found. "
+        "The dashboard cannot calculate work mode."
+    )
+    with st.expander("Column diagnostics"):
+        st.write("Remote column:", rem_col)
+        st.write("Office column:", off_col)
     st.stop()
 
-df_clean["rem_h"]      = pd.to_numeric(df_clean[rem_col], errors="coerce")
-df_clean["off_h"]      = pd.to_numeric(df_clean[off_col], errors="coerce")
-df_clean["total_h"]    = df_clean["rem_h"] + df_clean["off_h"]
-df_clean["pct_remote"] = np.where(df_clean["total_h"] > 0, (df_clean["rem_h"] / df_clean["total_h"]) * 100, np.nan)
 
+df_clean["rem_h"] = to_num(df_clean[rem_col])
+df_clean["off_h"] = to_num(df_clean[off_col])
+df_clean["total_h"] = df_clean["rem_h"] + df_clean["off_h"]
 
-df_clean["work_mode"] = np.select(
-    [df_clean["pct_remote"] > 60,
-     (df_clean["pct_remote"] >= 40) & (df_clean["pct_remote"] <= 60),
-     df_clean["pct_remote"] < 40],
-    ["Remote", "Hybrid", "Office"],
-    default="Unknown",
+df_clean["pct_remote"] = np.where(
+    df_clean["total_h"] > 0,
+    (df_clean["rem_h"] / df_clean["total_h"]) * 100,
+    np.nan,
 )
-df_clean["work_mode"] = df_clean["work_mode"].replace("Unknown", np.nan)
+
+# Avoid numpy string/NaN dtype-promotion problems by using an object Series.
+work_mode = pd.Series(index=df_clean.index, dtype="object")
+work_mode.loc[df_clean["pct_remote"] < 40] = "Office"
+work_mode.loc[
+    (df_clean["pct_remote"] >= 40)
+    & (df_clean["pct_remote"] <= 60)
+] = "Hybrid"
+work_mode.loc[df_clean["pct_remote"] > 60] = "Remote"
+
+df_clean["work_mode"] = work_mode
+
 work_order = ["Office", "Hybrid", "Remote"]
-df_clean["work_mode"] = pd.Categorical(df_clean["work_mode"], categories=work_order, ordered=True)
+df_clean["work_mode"] = pd.Categorical(
+    df_clean["work_mode"],
+    categories=work_order,
+    ordered=True,
+)
+
 df_master = df_clean.dropna(subset=["work_mode"]).copy()
 
+if df_master.empty:
+    st.error(
+        "No rows have usable remote/office hours, so work mode cannot be calculated."
+    )
+    st.stop()
+
+
+# -----------------------------------------------------------------------------
+# SIDEBAR
+# -----------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("### Analyze Per Demographic Team")
+
     demo_var = st.selectbox(
-        "",
+        "Demographic",
         options=["gender_f", "age_group", "ethnicity_f"],
         format_func=lambda x: demo_label_map[x],
+        label_visibility="collapsed",
     )
+
     st.markdown("---")
     st.markdown("### Evidence (BF)")
 
     factor_name = st.session_state.current_factor
     bf_val_side = bf_lookup.get(demo_var, {}).get(factor_name, "NA")
+
     st.metric("Bayes Factor", value=str(bf_val_side))
     st.caption(evidence_text_from_bf(bf_val_side))
 
     group_label = demo_label_map[demo_var]
+
     try:
         bf_num = float(bf_val_side)
-    except:
+    except (TypeError, ValueError):
         bf_num = np.nan
 
     if np.isnan(bf_num):
         result_txt = "Inconclusive: Not enough data."
     elif bf_num > 100:
-        result_txt = "Extreme Support for H₁: The data shows an overwhelming difference. We reject H₀ with high certainty."
+        result_txt = (
+            "Extreme Support for H₁: The data shows an overwhelming difference. "
+            "We reject H₀ with high certainty."
+        )
     elif bf_num > 3:
-        result_txt = "Support for H₁: There is substantial evidence that groups differ."
+        result_txt = (
+            "Support for H₁: There is substantial evidence that groups differ."
+        )
     elif bf_num < 1:
-        result_txt = "Support for H₀: The data suggests these groups are the same."
+        result_txt = (
+            "Support for H₀: The data suggests these groups are the same."
+        )
     else:
-        result_txt = "Inconclusive: The data doesn't strongly favor H₀ or H₁."
+        result_txt = (
+            "Inconclusive: The data doesn't strongly favor H₀ or H₁."
+        )
 
-    st.markdown(f"""
-    <div style="color:#e8eef6;font-size:15px;margin-top:10px;">
-      In this analysis, we use the Bayes Factor (BF) to choose between:
-    </div>
-    <div class="hypothesis-box">
-      <div style="margin-bottom:10px;">
-        <span class="h0-label">H₀ (Null Hypothesis):</span>
-        The groups are the same (No effect of demographic).
-      </div>
-      <div>
-        <span class="h1-label">H₁ (Alternative Hypothesis):</span>
-        The groups are different (Demographic matters).
-      </div>
-      <div class="hypothesis-callout">
-        <div><span class="h0-label">H₀:</span> No significant difference in <b>{factor_name}</b> across <b>{group_label}</b> groups.</div>
-        <div style="margin-top:8px;"><span class="h1-label">H₁:</span> <b>{group_label}</b> significantly influences <b>{factor_name}</b>.</div>
-      </div>
-      <div style="margin-top:15px;">
-        <span class="result-label">Result:</span>
-        <span style="color:#1f2d3d;font-weight:500;">{result_txt}</span>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div style="color:#e8eef6;font-size:15px;margin-top:10px;">
+          In this analysis, we use the Bayes Factor (BF) to choose between:
+        </div>
+        <div class="hypothesis-box">
+          <div style="margin-bottom:10px;">
+            <span class="h0-label">H₀ (Null Hypothesis):</span>
+            The groups are the same (No effect of demographic).
+          </div>
+          <div>
+            <span class="h1-label">H₁ (Alternative Hypothesis):</span>
+            The groups are different (Demographic matters).
+          </div>
+          <div class="hypothesis-callout">
+            <div>
+              <span class="h0-label">H₀:</span>
+              No significant difference in <b>{factor_name}</b>
+              across <b>{group_label}</b> groups.
+            </div>
+            <div style="margin-top:8px;">
+              <span class="h1-label">H₁:</span>
+              <b>{group_label}</b> significantly influences
+              <b>{factor_name}</b>.
+            </div>
+          </div>
+          <div style="margin-top:15px;">
+            <span class="result-label">Result:</span>
+            <span style="color:#1f2d3d;font-weight:500;">
+              {result_txt}
+            </span>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.expander("EFA status"):
+        st.write("Status: completed")
+        st.write("Method:", efa_method_used)
+        st.write("Complete rows used:", complete_efa_rows)
+        st.write("Likert detection:", likert_detection_method)
+        st.write("Detected items:", len(likert_cols))
 
 
+# -----------------------------------------------------------------------------
+# FACTOR KPI CARDS
+# -----------------------------------------------------------------------------
 cols = st.columns(4)
 
 for i, label in enumerate(factor_labels):
-    bf_val   = bf_lookup.get(demo_var, {}).get(label, "NA")
-    defn     = factor_defs[label]
-    active   = (st.session_state.current_factor == label)
+    bf_val = bf_lookup.get(demo_var, {}).get(label, "NA")
+    defn = factor_defs[label]
+    active = st.session_state.current_factor == label
     card_cls = "kpi-card active" if active else "kpi-card"
-    btn_lbl  = "✓ Selected" if active else "Select"
+    btn_lbl = "✓ Selected" if active else "Select"
     btn_type = "primary" if active else "secondary"
 
     with cols[i]:
         st.markdown('<div class="kpi-wrap">', unsafe_allow_html=True)
-        if st.button(btn_lbl, key=f"kpi_{i}", type=btn_type):
-            set_factor(label)
-        st.markdown(f"""
-        <div class="{card_cls}">
-          <div class="kpi-card-title">{label}</div>
-          <div class="kpi-card-bf">BF: {bf_val}</div>
-          <div class="kpi-card-def">{defn}</div>
-        </div>
-        </div>
-        """, unsafe_allow_html=True)
+
+        st.button(
+            btn_lbl,
+            key=f"kpi_{i}",
+            type=btn_type,
+            on_click=set_factor,
+            args=(label,),
+        )
+
+        st.markdown(
+            f"""
+            <div class="{card_cls}">
+              <div class="kpi-card-title">{label}</div>
+              <div class="kpi-card-bf">BF: {bf_val}</div>
+              <div class="kpi-card-def">{defn}</div>
+            </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
-f_label    = st.session_state.current_factor
+# -----------------------------------------------------------------------------
+# PLOT
+# -----------------------------------------------------------------------------
+f_label = st.session_state.current_factor
 factor_col = factor_to_col[f_label]
 group_label = demo_label_map[demo_var]
 
 plot_df = df_master.dropna(subset=[demo_var, factor_col]).copy()
-st.markdown("<div style='margin-top: 60px'></div>", unsafe_allow_html=True)
+
+st.markdown(
+    "<div style='margin-top: 60px'></div>",
+    unsafe_allow_html=True,
+)
+
 if plot_df.empty:
-    st.warning("No data to plot. Factor scores or demographics are missing after filtering.")
+    st.warning(
+        "No data to plot for this demographic/factor combination. "
+        "The EFA ran, but the selected demographic may be missing for the usable respondents."
+    )
 else:
     plot_df[demo_var] = plot_df[demo_var].astype("category")
 
     agg = (
         plot_df
-        .groupby(["work_mode", demo_var], as_index=False)[factor_col]
+        .groupby(
+            ["work_mode", demo_var],
+            as_index=False,
+            observed=True,
+        )[factor_col]
         .mean()
         .rename(columns={factor_col: "mean_score"})
     )
 
-    all_demo_levels = plot_df[demo_var].cat.categories
+    all_demo_levels = list(plot_df[demo_var].cat.categories)
+
     full_index = pd.MultiIndex.from_product(
-        [pd.Categorical(work_order, categories=work_order, ordered=True), all_demo_levels],
+        [work_order, all_demo_levels],
         names=["work_mode", demo_var],
     )
-    agg_full = agg.set_index(["work_mode", demo_var]).reindex(full_index).reset_index()
-    agg_full["label_text"] = agg_full["mean_score"].apply(lambda m: make_label(f_label, m))
+
+    agg_full = (
+        agg
+        .set_index(["work_mode", demo_var])
+        .reindex(full_index)
+        .reset_index()
+    )
+
+    agg_full["work_mode"] = pd.Categorical(
+        agg_full["work_mode"],
+        categories=work_order,
+        ordered=True,
+    )
+
+    agg_full["label_text"] = agg_full["mean_score"].apply(
+        lambda m: make_label(f_label, m)
+    )
 
     fig = px.bar(
         agg_full,
@@ -477,15 +918,18 @@ else:
         text="label_text",
         title=f"Analysis of {f_label} Grouped by {group_label}",
         category_orders={"work_mode": work_order},
-        labels={"work_mode": "Work Mode"}
+        labels={
+            "work_mode": "Work Mode",
+            "mean_score": "Mean Standardized Score",
+        },
     )
-    fig.update_traces(
-    textposition='outside'
-    
-)
-    fig.for_each_annotation(lambda a: a.update(
-        text=a.text.split("=")[-1].strip()
-    ))
+
+    fig.update_traces(textposition="outside")
+
+    fig.for_each_annotation(
+        lambda a: a.update(text=a.text.split("=")[-1].strip())
+    )
+
     fig.update_layout(
         height=720,
         showlegend=False,
@@ -493,8 +937,14 @@ else:
         xaxis_title="",
         font=dict(size=14),
         margin=dict(l=20, r=20, t=60, b=20),
-        title={"x": 0.5, "xanchor": "center"}
+        title={"x": 0.5, "xanchor": "center"},
     )
-    fig.add_hline(y=0, line_dash="dash", opacity=0.35)
+
+    fig.add_hline(
+        y=0,
+        line_dash="dash",
+        opacity=0.35,
+    )
+
     st.plotly_chart(fig, use_container_width=True)
 
