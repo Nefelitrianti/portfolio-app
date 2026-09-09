@@ -252,7 +252,11 @@ elif selected == "Projects":
                 st.header(selected_name)
 
                 
-                scope = {"st": st}
+                scope = {
+                            "st": st,
+                            "__file__": str(script_file),
+                            "__name__": "__main__",
+                    }
 
                 try:
                     exec(code, scope, scope)
