@@ -182,7 +182,12 @@ def find_hours_cols(cols):
     # Prefer the exact questionnaire column names.
     rem_col = remote_exact if remote_exact in cols else None
     off_col = office_exact if office_exact in cols else None
+    st.write("HOURS FUNCTION VERSION 3")
+    st.write("REMOTE:", rem_col)
+    st.write("OFFICE:", off_col)
 
+st.write("HOUR COLUMNS FOUND:")
+st.write([c for c in df0.columns if "hours" in c])
     # Safe fallback for slightly changed questionnaire headers.
     if rem_col is None:
         rem_candidates = [
