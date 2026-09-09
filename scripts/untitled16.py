@@ -186,8 +186,8 @@ def find_hours_cols(cols):
     st.write("REMOTE:", rem_col)
     st.write("OFFICE:", off_col)
 
-st.write("HOUR COLUMNS FOUND:")
-st.write([c for c in df0.columns if "hours" in c])
+    st.write("HOUR COLUMNS FOUND:")
+    st.write([c for c in df0.columns if "hours" in c])
     # Safe fallback for slightly changed questionnaire headers.
     if rem_col is None:
         rem_candidates = [
