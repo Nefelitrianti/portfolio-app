@@ -20,7 +20,7 @@ import streamlit as st
 # SETTINGS
 # -----------------------------------------------------------------------------
 THIS_DIR = Path(__file__).resolve().parent
-BASE_DIR = THIS_DIR.parent if THIS_DIR.name == "pages" else THIS_DIR
+BASE_DIR = Path(__file__).resolve().parent.parent
 FILE_PATH = BASE_DIR / "data" / "RMAP_Data_Descriptor_Data.xlsx"
 SHEET_NAME = "RMAP_Data_Descriptor_Data"
 USE_EFA = True
