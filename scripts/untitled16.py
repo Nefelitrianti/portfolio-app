@@ -267,7 +267,7 @@ def detect_likert_columns(df):
 # DATA + EFA FUNCTIONS
 # -----------------------------------------------------------------------------
 @st.cache_data(show_spinner=False)
-def load_excel_fast(path: str):
+def load_excel_fast(path: str, cache_version: str = "hours_v4"):
     df0 = pd.read_excel(
         path,
         sheet_name=SHEET_NAME,
