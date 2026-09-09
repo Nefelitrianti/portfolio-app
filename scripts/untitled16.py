@@ -1,4 +1,3 @@
-
 import os
 import re
 from pathlib import Path
@@ -168,20 +167,37 @@ def make_label(f_label, mean_value):
 
 
 def find_hours_cols(cols):
+    """Find the two weekly-work-schedule hour columns reliably."""
     cols = list(cols)
 
-    rem_candidates = [
-        c for c in cols
-        if c.endswith("_remotely_hours")
-    ]
+    remote_exact = (
+        "on_average_what_amount_of_time_of_your_weekly_work_schedule_do_you_"
+        "perform_remotely_in_the_office_remotely_hours"
+    )
+    office_exact = (
+        "on_average_what_amount_of_time_of_your_weekly_work_schedule_do_you_"
+        "perform_remotely_in_the_office_in_the_office_hours"
+    )
 
-    off_candidates = [
-        c for c in cols
-        if c.endswith("_in_the_office_hours")
-    ]
+    # Prefer the exact questionnaire column names.
+    rem_col = remote_exact if remote_exact in cols else None
+    off_col = office_exact if office_exact in cols else None
 
-    rem_col = rem_candidates[0] if rem_candidates else None
-    off_col = off_candidates[0] if off_candidates else None
+    # Safe fallback for slightly changed questionnaire headers.
+    if rem_col is None:
+        rem_candidates = [
+            c for c in cols
+            if c.endswith("_remotely_hours")
+            and not c.endswith("_in_the_office_hours")
+        ]
+        rem_col = rem_candidates[0] if rem_candidates else None
+
+    if off_col is None:
+        off_candidates = [
+            c for c in cols
+            if c.endswith("_in_the_office_hours")
+        ]
+        off_col = off_candidates[0] if off_candidates else None
 
     return rem_col, off_col
 def detect_likert_columns(df):
